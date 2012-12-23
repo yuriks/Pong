@@ -7,6 +7,7 @@
 #include <fstream>
 #include <cassert>
 #include <vector>
+#include <cstdint>
 
 #define CHECK_GL_ERROR assert(glGetError() == GL_NO_ERROR)
 
@@ -208,6 +209,16 @@ struct SpriteBuffer {
 	}
 };
 
+typedef int32_t fixed24_8;
+
+struct GameState {
+	fixed24_8 ball_pos_x;
+	fixed24_8 ball_pos_y;
+
+	fixed24_8 ball_vel_x;
+	fixed24_8 ball_vel_y;
+};
+
 int main() {
 	if (!glfwInit()) {
 		return 1;
@@ -230,6 +241,7 @@ int main() {
 		return 1;
 	}
 
+	glfwSwapInterval(1);
 	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	if (glDebugMessageCallbackARB) {
@@ -300,11 +312,43 @@ int main() {
 	glGenBuffers(1, &ibo_id);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_id);
 
+	static const int BALL_RADIUS = 8;
+
+	GameState game_state;
+	game_state.ball_pos_x = (WINDOW_WIDTH / 2) << 8;
+	game_state.ball_pos_y = (WINDOW_HEIGHT / 2) << 8;
+	game_state.ball_vel_x = 2 << 8;
+	game_state.ball_vel_y = -1 << 8;
+
+	Sprite ball_spr;
+	ball_spr.w = ball_spr.h = ball_spr.img_w = ball_spr.img_h = 16;
+	ball_spr.img_x = 16; ball_spr.img_y = 0;
+
 	CHECK_GL_ERROR;
-	
+
 	bool running = true;
 	while (running) {
 		glClear(GL_COLOR_BUFFER_BIT);
+		sprite_buffer.clear();
+
+		game_state.ball_pos_x += game_state.ball_vel_x;
+		game_state.ball_pos_y += game_state.ball_vel_y;
+
+		if ((game_state.ball_pos_x >> 8) - BALL_RADIUS <= 0 ||
+			(game_state.ball_pos_x >> 8) + BALL_RADIUS >= WINDOW_WIDTH)
+		{
+			game_state.ball_vel_x = -game_state.ball_vel_x;
+		}
+
+		if ((game_state.ball_pos_y >> 8) - BALL_RADIUS <= 0 ||
+			(game_state.ball_pos_y >> 8) + BALL_RADIUS >= WINDOW_HEIGHT)
+		{
+			game_state.ball_vel_y = -game_state.ball_vel_y;
+		}
+
+		ball_spr.x = static_cast<float>(game_state.ball_pos_x >> 8) - ball_spr.w / 2;
+		ball_spr.y = static_cast<float>(game_state.ball_pos_y >> 8) - ball_spr.h / 2;
+		sprite_buffer.append(ball_spr);
 
 		sprite_buffer.upload();
 		sprite_buffer.draw();
