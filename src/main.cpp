@@ -213,7 +213,9 @@ int main() {
 		return 1;
 	}
 
-	if (!glfwOpenWindow(800, 600, 8, 8, 8, 0, 24, 8, GLFW_WINDOW)) {
+	glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 3);
+	glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 3);
+	if (!glfwOpenWindow(800, 600, 8, 8, 8, 0, 0, 8, GLFW_WINDOW)) {
 		return 1;
 	}
 
