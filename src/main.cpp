@@ -118,6 +118,87 @@ struct VertexData {
 	GLfloat tex_s, tex_t;
 };
 
+struct Sprite {
+	float x, y;
+	float w, h;
+	float img_x, img_y;
+	float img_h, img_w;
+};
+
+struct SpriteBuffer {
+	std::vector<VertexData> vertices;
+	std::vector<GLushort> indices;
+
+	unsigned int vertex_count;
+	unsigned int index_count;
+
+	SpriteBuffer() :
+		vertex_count(0), index_count(0)
+	{ }
+
+	void clear() {
+		vertices.clear();
+		vertex_count = 0;
+	}
+
+	void append(const Sprite& spr) {
+		VertexData v;
+
+		v.pos_x = spr.x;
+		v.pos_y = spr.y;
+		v.tex_s = spr.img_x;
+		v.tex_t = spr.img_y;
+		vertices.push_back(v);
+
+		v.pos_x = spr.x + spr.w;
+		v.tex_s = spr.img_x + spr.img_w;
+		vertices.push_back(v);
+
+		v.pos_y = spr.y + spr.h;
+		v.tex_t = spr.img_y + spr.img_h;
+		vertices.push_back(v);
+
+		v.pos_x = spr.x;
+		v.tex_s = spr.img_x;
+		vertices.push_back(v);
+
+		vertex_count += 1;
+	}
+
+	// Returns true if indices need to be updated
+	bool generate_indices() {
+		if (index_count >= vertex_count)
+			return false;
+
+		indices.reserve(vertex_count * 6);
+		for (unsigned int i = index_count; i < vertex_count; ++i) {
+			unsigned short base_i = i * 4;
+
+			indices.push_back(base_i + 0);
+			indices.push_back(base_i + 1);
+			indices.push_back(base_i + 3);
+
+			indices.push_back(base_i + 3);
+			indices.push_back(base_i + 1);
+			indices.push_back(base_i + 2);
+		}
+
+		index_count = vertex_count;
+		return true;
+	}
+
+	void upload() {
+		if (generate_indices()) {
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort)*indices.size(), indices.data(), GL_STREAM_DRAW);
+		}
+		glBufferData(GL_ARRAY_BUFFER, sizeof(VertexData)*vertices.size(), vertices.data(), GL_STREAM_DRAW);
+	}
+
+	void draw() {
+		glDrawElements(GL_TRIANGLES, vertex_count * 6, GL_UNSIGNED_SHORT, nullptr);
+	}
+};
+
 int main() {
 	if (!glfwInit()) {
 		return 1;
@@ -151,11 +232,12 @@ int main() {
 	glUseProgram(shader_program);
 
 	GLuint u_view_matrix_location = glGetUniformLocation(shader_program, "u_view_matrix");
-	GLfloat view_matrix[9];
-	for (int j = 0; j < 3; ++j)
-		for (int i = 0; i < 3; ++i)
-			view_matrix[j*3 + i] = (i == j) ? 1.0f : 0.0f;
-	glUniformMatrix3fv(u_view_matrix_location, 1, GL_FALSE, view_matrix);
+	GLfloat view_matrix[9] = {
+		1.0f,  0.0f, 0.0f,
+		0.0f, -1.0f, 0.0f,
+		0.0f,  0.0f, 1.0f
+	};
+	glUniformMatrix3fv(u_view_matrix_location, 1, GL_TRUE, view_matrix);
 
 	GLuint u_texture_location = glGetUniformLocation(shader_program, "u_texture");
 	glUniform1i(u_texture_location, 0);
@@ -169,17 +251,16 @@ int main() {
 
 	CHECK_GL_ERROR;
 
-	static const VertexData vertices[2*4] = {
-		{-0.9f, -0.9f, 0.0f, 1.0f},
-		{-0.9f,  0.2f, 0.0f, 0.0f},
-		{ 0.2f,  0.2f, 1.0f, 0.0f},
-		{ 0.2f, -0.9f, 1.0f, 1.0f},
+	SpriteBuffer sprite_buffer;
+	Sprite tmp_spr;
+	tmp_spr.img_x = tmp_spr.img_y = 0.0f;
+	tmp_spr.img_w = tmp_spr.img_h = 1.0f;
+	tmp_spr.w = tmp_spr.h = 1.0f;
 
-		{-0.2f, -0.2f, 0.0f, 1.0f},
-		{-0.2f,  0.9f, 0.0f, 0.0f},
-		{ 0.9f,  0.9f, 1.0f, 0.0f},
-		{ 0.9f, -0.2f, 1.0f, 1.0f}
-	};
+	tmp_spr.x = tmp_spr.y = -0.9f;
+	sprite_buffer.append(tmp_spr);
+	tmp_spr.x = tmp_spr.y = -0.1f;
+	sprite_buffer.append(tmp_spr);
 
 	GLuint vao_id;
 	glGenVertexArrays(1, &vao_id);
@@ -187,20 +268,25 @@ int main() {
 
 	GLuint vbo_id;
 	glGenBuffers(1, &vbo_id);
-
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), reinterpret_cast<void*>(offsetof(VertexData, pos_x)));
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_TRUE,  sizeof(VertexData), reinterpret_cast<void*>(offsetof(VertexData, tex_s)));
 	for (int i = 0; i < 2; ++i)
 		glEnableVertexAttribArray(i);
+
+	GLuint ibo_id;
+	glGenBuffers(1, &ibo_id);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_id);
+
+	CHECK_GL_ERROR;
 	
 	bool running = true;
 	while (running) {
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glDrawArrays(GL_QUADS, 0, 2*4);
+		sprite_buffer.upload();
+		sprite_buffer.draw();
 
 		glfwSwapBuffers();
 		running = running && glfwGetWindowParam(GLFW_OPENED);
