@@ -10,7 +10,7 @@
 
 #define CHECK_GL_ERROR assert(glGetError() == GL_NO_ERROR)
 
-GLuint loadMainTexture() {
+GLuint loadMainTexture(int* width, int* height) {
 	GLuint main_texture;
 	glGenTextures(1, &main_texture);
 
@@ -20,12 +20,12 @@ GLuint loadMainTexture() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-	int width, height, comp;
-	unsigned char* data = stbi_load("graphics.png", &width, &height, &comp, 4);
+	int comp;
+	unsigned char* data = stbi_load("graphics.png", width, height, &comp, 4);
 	if (data == nullptr)
 		return 0;
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, *width, *height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
 	return main_texture;
 }
@@ -132,8 +132,12 @@ struct SpriteBuffer {
 	unsigned int vertex_count;
 	unsigned int index_count;
 
+	float tex_width;
+	float tex_height;
+
 	SpriteBuffer() :
-		vertex_count(0), index_count(0)
+		vertex_count(0), index_count(0),
+		tex_width(1.0f), tex_height(1.0f)
 	{ }
 
 	void clear() {
@@ -142,24 +146,29 @@ struct SpriteBuffer {
 	}
 
 	void append(const Sprite& spr) {
+		float img_x = spr.img_x / tex_width;
+		float img_w = spr.img_w / tex_width;
+		float img_y = spr.img_y / tex_height;
+		float img_h = spr.img_h / tex_height;
+
 		VertexData v;
 
 		v.pos_x = spr.x;
 		v.pos_y = spr.y;
-		v.tex_s = spr.img_x;
-		v.tex_t = spr.img_y;
+		v.tex_s = img_x;
+		v.tex_t = img_y;
 		vertices.push_back(v);
 
 		v.pos_x = spr.x + spr.w;
-		v.tex_s = spr.img_x + spr.img_w;
+		v.tex_s = img_x + img_w;
 		vertices.push_back(v);
 
 		v.pos_y = spr.y + spr.h;
-		v.tex_t = spr.img_y + spr.img_h;
+		v.tex_t = img_y + img_h;
 		vertices.push_back(v);
 
 		v.pos_x = spr.x;
-		v.tex_s = spr.img_x;
+		v.tex_s = img_x;
 		vertices.push_back(v);
 
 		vertex_count += 1;
@@ -222,7 +231,8 @@ int main() {
 		glDebugMessageCallbackARB(debug_callback, 0);
 	}
 
-	GLuint main_texture = loadMainTexture();
+	int tex_width, tex_height;
+	GLuint main_texture = loadMainTexture(&tex_width, &tex_height);
 	assert(main_texture != 0);
 
 	glEnable(GL_BLEND);
@@ -233,9 +243,9 @@ int main() {
 
 	GLuint u_view_matrix_location = glGetUniformLocation(shader_program, "u_view_matrix");
 	GLfloat view_matrix[9] = {
-		1.0f,  0.0f, 0.0f,
-		0.0f, -1.0f, 0.0f,
-		0.0f,  0.0f, 1.0f
+		1.0f/400.f,  0.0f,      -1.0f,
+		0.0f,       -1.0/300.f,  1.0f,
+		0.0f,        0.0f,       1.0f
 	};
 	glUniformMatrix3fv(u_view_matrix_location, 1, GL_TRUE, view_matrix);
 
@@ -252,12 +262,16 @@ int main() {
 	CHECK_GL_ERROR;
 
 	SpriteBuffer sprite_buffer;
+	sprite_buffer.tex_width = static_cast<float>(tex_width);
+	sprite_buffer.tex_height = static_cast<float>(tex_height);
+
 	Sprite tmp_spr;
 	tmp_spr.img_x = tmp_spr.img_y = 0.0f;
-	tmp_spr.img_w = tmp_spr.img_h = 1.0f;
-	tmp_spr.w = tmp_spr.h = 1.0f;
+	tmp_spr.img_w = tmp_spr.img_h = 64.0f;
+	tmp_spr.w = tmp_spr.h = 64.0f;
 
-	tmp_spr.x = tmp_spr.y = -0.9f;
+	tmp_spr.x = 200.0f;
+	tmp_spr.y = 100.0f;
 	sprite_buffer.append(tmp_spr);
 	tmp_spr.x = tmp_spr.y = -0.1f;
 	sprite_buffer.append(tmp_spr);
