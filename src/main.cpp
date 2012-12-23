@@ -213,9 +213,12 @@ int main() {
 		return 1;
 	}
 
+	static const int WINDOW_WIDTH = 320;
+	static const int WINDOW_HEIGHT = 240;
+
 	glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 3);
 	glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 3);
-	if (!glfwOpenWindow(800, 600, 8, 8, 8, 0, 0, 8, GLFW_WINDOW)) {
+	if (!glfwOpenWindow(WINDOW_WIDTH, WINDOW_HEIGHT, 8, 8, 8, 0, 0, 8, GLFW_WINDOW)) {
 		return 1;
 	}
 
@@ -245,9 +248,9 @@ int main() {
 
 	GLuint u_view_matrix_location = glGetUniformLocation(shader_program, "u_view_matrix");
 	GLfloat view_matrix[9] = {
-		1.0f/400.f,  0.0f,      -1.0f,
-		0.0f,       -1.0/300.f,  1.0f,
-		0.0f,        0.0f,       1.0f
+		2.0f/WINDOW_WIDTH,  0.0f,              -1.0f,
+		0.0f,              -2.0/WINDOW_HEIGHT,  1.0f,
+		0.0f,               0.0f,               1.0f
 	};
 	glUniformMatrix3fv(u_view_matrix_location, 1, GL_TRUE, view_matrix);
 
