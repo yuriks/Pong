@@ -230,6 +230,8 @@ int main() {
 		return 1;
 	}
 
+	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+
 	if (glDebugMessageCallbackARB) {
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
 		glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, GL_TRUE);
