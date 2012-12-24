@@ -210,12 +210,16 @@ struct SpriteBuffer {
 	}
 };
 
-struct GameState {
-	fixed24_8 ball_pos_x;
-	fixed24_8 ball_pos_y;
+struct Ball {
+	fixed24_8 pos_x;
+	fixed24_8 pos_y;
 
-	fixed24_8 ball_vel_x;
-	fixed24_8 ball_vel_y;
+	fixed24_8 vel_x;
+	fixed24_8 vel_y;
+};
+
+struct GameState {
+	Ball balls[10];
 };
 
 int main() {
@@ -314,10 +318,15 @@ int main() {
 	static const int BALL_RADIUS = 8;
 
 	GameState game_state;
-	game_state.ball_pos_x = WINDOW_WIDTH / 2;
-	game_state.ball_pos_y = WINDOW_HEIGHT / 2;
-	game_state.ball_vel_x = 2;
-	game_state.ball_vel_y = -1;
+
+	for (Ball& ball : game_state.balls) {
+		ball.pos_x = WINDOW_WIDTH / 2;
+		ball.pos_y = WINDOW_HEIGHT / 2;
+		ball.vel_x = fixed24_8(0, rand() % 2048 + 1, 1024);
+		if (rand() % 2) ball.vel_x = -ball.vel_x;
+		ball.vel_y = fixed24_8(0, rand() % 4096 + 1, 1024);
+		if (rand() % 2) ball.vel_y = -ball.vel_y;
+	}
 
 	Sprite ball_spr;
 	ball_spr.w = ball_spr.h = ball_spr.img_w = ball_spr.img_h = 16;
@@ -330,34 +339,36 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT);
 		sprite_buffer.clear();
 
-		game_state.ball_vel_y += fixed24_8(0, 1, 8);
+		for (Ball& ball : game_state.balls) {
+			ball.vel_y += fixed24_8(0, 1, 8);
 
-		game_state.ball_pos_x += game_state.ball_vel_x;
-		game_state.ball_pos_y += game_state.ball_vel_y;
+			ball.pos_x += ball.vel_x;
+			ball.pos_y += ball.vel_y;
 
-		if (game_state.ball_pos_x - BALL_RADIUS < 0) {
-			game_state.ball_vel_x = -game_state.ball_vel_x;
-			game_state.ball_pos_x = BALL_RADIUS;
+			if (ball.pos_x - BALL_RADIUS < 0) {
+				ball.vel_x = -ball.vel_x;
+				ball.pos_x = BALL_RADIUS;
+			}
+
+			if (ball.pos_x + BALL_RADIUS > WINDOW_WIDTH) {
+				ball.vel_x = -ball.vel_x;
+				ball.pos_x = WINDOW_WIDTH - BALL_RADIUS;
+			}
+
+			if (ball.pos_y - BALL_RADIUS < 0) {
+				ball.vel_y = -ball.vel_y;
+				ball.pos_y = BALL_RADIUS;
+			}
+
+			if (ball.pos_y + BALL_RADIUS > WINDOW_HEIGHT) {
+				ball.vel_y = -ball.vel_y;
+				ball.pos_y = WINDOW_HEIGHT - BALL_RADIUS;
+			}
+
+			ball_spr.x = static_cast<float>(ball.pos_x.integer()) - ball_spr.w / 2;
+			ball_spr.y = static_cast<float>(ball.pos_y.integer()) - ball_spr.h / 2;
+			sprite_buffer.append(ball_spr);
 		}
-
-		if (game_state.ball_pos_x + BALL_RADIUS > WINDOW_WIDTH) {
-			game_state.ball_vel_x = -game_state.ball_vel_x;
-			game_state.ball_pos_x = WINDOW_WIDTH - BALL_RADIUS;
-		}
-
-		if (game_state.ball_pos_y - BALL_RADIUS < 0) {
-			game_state.ball_vel_y = -game_state.ball_vel_y;
-			game_state.ball_pos_y = BALL_RADIUS;
-		}
-
-		if (game_state.ball_pos_y + BALL_RADIUS > WINDOW_HEIGHT) {
-			game_state.ball_vel_y = -game_state.ball_vel_y;
-			game_state.ball_pos_y = WINDOW_HEIGHT - BALL_RADIUS;
-		}
-
-		ball_spr.x = static_cast<float>(game_state.ball_pos_x.integer()) - ball_spr.w / 2;
-		ball_spr.y = static_cast<float>(game_state.ball_pos_y.integer()) - ball_spr.h / 2;
-		sprite_buffer.append(ball_spr);
 
 		sprite_buffer.upload();
 		sprite_buffer.draw();
