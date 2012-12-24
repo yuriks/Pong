@@ -8,6 +8,7 @@
 #include <cassert>
 #include <vector>
 #include <cstdint>
+#include <array>
 #include "Fixed.hpp"
 
 #define CHECK_GL_ERROR assert(glGetError() == GL_NO_ERROR)
@@ -219,16 +220,53 @@ struct Ball {
 };
 
 struct GameState {
-	Ball balls[10];
+	std::array<Ball, 8> balls;
 };
 
+static const int WINDOW_WIDTH = 320;
+static const int WINDOW_HEIGHT = 240;
+
+static const int BALL_RADIUS = 8;
+
+void collideBallWithBoundary(Ball& ball) {
+	if (ball.pos_x - BALL_RADIUS < 0) {
+		ball.vel_x = -ball.vel_x;
+		ball.pos_x = BALL_RADIUS;
+	}
+
+	if (ball.pos_x + BALL_RADIUS > WINDOW_WIDTH) {
+		ball.vel_x = -ball.vel_x;
+		ball.pos_x = WINDOW_WIDTH - BALL_RADIUS;
+	}
+
+	if (ball.pos_y - BALL_RADIUS < 0) {
+		ball.vel_y = -ball.vel_y;
+		ball.pos_y = BALL_RADIUS;
+	}
+
+	if (ball.pos_y + BALL_RADIUS > WINDOW_HEIGHT) {
+		ball.vel_y = -ball.vel_y;
+		ball.pos_y = WINDOW_HEIGHT - BALL_RADIUS;
+	}
+}
+
+void collideBallWithBall(Ball& a, Ball& b) {
+	fixed56_8 dx = fixed56_8(a.pos_x - b.pos_x);
+	fixed56_8 dy = fixed56_8(a.pos_y - b.pos_y);
+	fixed48_16 d_sqr = dx*dx + dy*dy;
+
+	if (d_sqr < (2*BALL_RADIUS)*(2*BALL_RADIUS)) {
+		std::swap(a.vel_x, b.vel_x);
+		std::swap(a.vel_y, b.vel_y);
+	}
+}
+
 int main() {
+	srand(123);
+
 	if (!glfwInit()) {
 		return 1;
 	}
-
-	static const int WINDOW_WIDTH = 320;
-	static const int WINDOW_HEIGHT = 240;
 
 	glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 3);
 	glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 3);
@@ -315,13 +353,14 @@ int main() {
 	glGenBuffers(1, &ibo_id);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_id);
 
-	static const int BALL_RADIUS = 8;
-
 	GameState game_state;
 
-	for (Ball& ball : game_state.balls) {
-		ball.pos_x = WINDOW_WIDTH / 2;
+	for (unsigned int i = 0; i < game_state.balls.size(); ++i) {
+		Ball& ball = game_state.balls[i];
+
+		ball.pos_x = (i + 1) * WINDOW_WIDTH / (game_state.balls.size() + 1);
 		ball.pos_y = WINDOW_HEIGHT / 2;
+
 		ball.vel_x = fixed24_8(0, rand() % 2048 + 1, 1024);
 		if (rand() % 2) ball.vel_x = -ball.vel_x;
 		ball.vel_y = fixed24_8(0, rand() % 4096 + 1, 1024);
@@ -339,30 +378,17 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT);
 		sprite_buffer.clear();
 
-		for (Ball& ball : game_state.balls) {
+		for (unsigned int i = 0; i < game_state.balls.size(); ++i) {
+			Ball& ball = game_state.balls[i];
+
 			ball.vel_y += fixed24_8(0, 1, 8);
 
 			ball.pos_x += ball.vel_x;
 			ball.pos_y += ball.vel_y;
 
-			if (ball.pos_x - BALL_RADIUS < 0) {
-				ball.vel_x = -ball.vel_x;
-				ball.pos_x = BALL_RADIUS;
-			}
-
-			if (ball.pos_x + BALL_RADIUS > WINDOW_WIDTH) {
-				ball.vel_x = -ball.vel_x;
-				ball.pos_x = WINDOW_WIDTH - BALL_RADIUS;
-			}
-
-			if (ball.pos_y - BALL_RADIUS < 0) {
-				ball.vel_y = -ball.vel_y;
-				ball.pos_y = BALL_RADIUS;
-			}
-
-			if (ball.pos_y + BALL_RADIUS > WINDOW_HEIGHT) {
-				ball.vel_y = -ball.vel_y;
-				ball.pos_y = WINDOW_HEIGHT - BALL_RADIUS;
+			collideBallWithBoundary(ball);
+			for (unsigned int j = i + 1; j < game_state.balls.size(); ++j) {
+				collideBallWithBall(ball, game_state.balls[j]);
 			}
 
 			ball_spr.x = static_cast<float>(ball.pos_x.integer()) - ball_spr.w / 2;

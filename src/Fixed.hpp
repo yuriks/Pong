@@ -77,3 +77,9 @@ typedef Fixed<int32_t,  8> fixed24_8;
 typedef Fixed<int32_t, 16> fixed16_16;
 typedef Fixed<int32_t, 24> fixed8_24;
 typedef Fixed<int32_t, 32> fixed0_32;
+
+typedef Fixed<int64_t, 0> fixed64_0;
+typedef Fixed<int64_t, 8> fixed56_8;
+typedef Fixed<int64_t, 16> fixed48_16;
+typedef Fixed<int64_t, 24> fixed40_24;
+typedef Fixed<int64_t, 32> fixed32_32;
