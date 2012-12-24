@@ -24,9 +24,15 @@ public:
 	Fixed(T int_part, T frac_numer, T frac_denom) : value((int_part << FRACTIONAL_BITS) + (frac_numer << FRACTIONAL_BITS) / frac_denom) { }
 
 	template <typename OtherT, unsigned int OtherFracBits>
-	explicit Fixed(Fixed<OtherT, OtherFracBits> o) : value(FracBits < OtherFracBits ?
-		o.value >> (OtherFracBits - FracBits) :
-		o.value << (FracBits - OtherFracBits))
+	explicit Fixed (Fixed<OtherT, OtherFracBits> o,
+		typename std::enable_if<(FracBits < OtherFracBits)>::type* = nullptr)
+		: value(o.value >> (OtherFracBits - FracBits))
+	{ }
+
+	template <typename OtherT, unsigned int OtherFracBits>
+	explicit Fixed (Fixed<OtherT, OtherFracBits> o,
+		typename std::enable_if<(FracBits >= OtherFracBits)>::type* = nullptr)
+		: value(o.value << (FracBits - OtherFracBits))
 	{ }
 
 	T integer() const { return value >> FracBits; }
