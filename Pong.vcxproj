@@ -81,6 +81,7 @@
     <ClCompile Include="src\stb_image.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Fixed.hpp" />
     <ClInclude Include="src\GL3\gl3.h" />
     <ClInclude Include="src\GL3\gl3w.h" />
     <ClInclude Include="src\stb_image.h" />
