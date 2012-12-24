@@ -331,19 +331,29 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT);
 		sprite_buffer.clear();
 
+		game_state.ball_vel_y += (1 << 8) / 8;
+
 		game_state.ball_pos_x += game_state.ball_vel_x;
 		game_state.ball_pos_y += game_state.ball_vel_y;
 
-		if ((game_state.ball_pos_x >> 8) - BALL_RADIUS <= 0 ||
-			(game_state.ball_pos_x >> 8) + BALL_RADIUS >= WINDOW_WIDTH)
-		{
+		if ((game_state.ball_pos_x >> 8) - BALL_RADIUS < 0) {
 			game_state.ball_vel_x = -game_state.ball_vel_x;
+			game_state.ball_pos_x = BALL_RADIUS << 8;
 		}
 
-		if ((game_state.ball_pos_y >> 8) - BALL_RADIUS <= 0 ||
-			(game_state.ball_pos_y >> 8) + BALL_RADIUS >= WINDOW_HEIGHT)
-		{
+		if ((game_state.ball_pos_x >> 8) + BALL_RADIUS > WINDOW_WIDTH) {
+			game_state.ball_vel_x = -game_state.ball_vel_x;
+			game_state.ball_pos_x = (WINDOW_WIDTH - BALL_RADIUS) << 8;
+		}
+
+		if ((game_state.ball_pos_y >> 8) - BALL_RADIUS < 0) {
 			game_state.ball_vel_y = -game_state.ball_vel_y;
+			game_state.ball_pos_y = BALL_RADIUS << 8;
+		}
+
+		if ((game_state.ball_pos_y >> 8) + BALL_RADIUS > WINDOW_HEIGHT) {
+			game_state.ball_vel_y = -game_state.ball_vel_y;
+			game_state.ball_pos_y = (WINDOW_HEIGHT - BALL_RADIUS) << 8;
 		}
 
 		ball_spr.x = static_cast<float>(game_state.ball_pos_x >> 8) - ball_spr.w / 2;
