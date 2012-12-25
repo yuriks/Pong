@@ -10,7 +10,7 @@ class Fixed {
 public:
 	static const unsigned int INTEGRAL_BITS = std::numeric_limits<T>::digits - FracBits;
 	static const unsigned int FRACTIONAL_BITS = FracBits;
-	static const T FRACTIONAL_MASK = (1 << FRACTIONAL_BITS) - 1;
+	static const T FRACTIONAL_MASK = (T(1) << FRACTIONAL_BITS) - 1;
 	static const T INTEGER_MASK = ~FRACTIONAL_MASK;
 
 	static Fixed raw(T val) {
@@ -36,6 +36,10 @@ public:
 	{ }
 
 	T integer() const { return value >> FracBits; }
+
+	float toFloat() const {
+		return float(value) / float(T(1) << FRACTIONAL_BITS);
+	}
 
 	///////////////////////////////////
 
