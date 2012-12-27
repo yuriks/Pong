@@ -273,7 +273,7 @@ void collideBallWithBall(Ball& a, Ball& b) {
 
 	if (d_sqr < (2*BALL_RADIUS)*(2*BALL_RADIUS)) {
 		float d = std::sqrt(d_sqr);
-		float sz = 2*BALL_RADIUS - d;
+		float sz = BALL_RADIUS - d / 2.0f;
 		fixed24_8 push_back_x(sz * (dx/d));
 		fixed24_8 push_back_y(sz * (dy/d));
 
