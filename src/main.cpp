@@ -293,11 +293,17 @@ void collideBallWithBall(Ball& a, Ball& b) {
 		splitVector(b.vel_x.toFloat(), b.vel_y.toFloat(), -dx, -dy,
 			&b_par_x, &b_par_y, &b_perp_x, &b_perp_y);
 
-		a.vel_x = fixed16_16(b_par_x + a_perp_x);
-		a.vel_y = fixed16_16(b_par_y + a_perp_y);
+		static const float friction = 1.0f;
+		static const float bounce = 0.9f;
 
-		b.vel_x = fixed16_16(a_par_x + b_perp_x);
-		b.vel_y = fixed16_16(a_par_y + b_perp_y);
+		float A = (1.0f + bounce) / 2.0f;
+		float B = (1.0f - bounce) / 2.0f;
+
+		a.vel_x = fixed16_16(A*b_par_x + B*a_par_x + friction*a_perp_x);
+		a.vel_y = fixed16_16(A*b_par_y + B*a_par_y + friction*a_perp_y);
+
+		b.vel_x = fixed16_16(A*a_par_x + B*b_par_x + friction*b_perp_x);
+		b.vel_y = fixed16_16(A*a_par_y + B*b_par_y + friction*b_perp_y);
 	}
 }
 
