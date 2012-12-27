@@ -215,8 +215,8 @@ struct Ball {
 	fixed24_8 pos_x;
 	fixed24_8 pos_y;
 
-	fixed24_8 vel_x;
-	fixed24_8 vel_y;
+	fixed16_16 vel_x;
+	fixed16_16 vel_y;
 };
 
 struct GameState {
@@ -361,9 +361,9 @@ int main() {
 		ball.pos_x = (i + 1) * WINDOW_WIDTH / (game_state.balls.size() + 1);
 		ball.pos_y = WINDOW_HEIGHT / 2;
 
-		ball.vel_x = fixed24_8(0, rand() % 2048 + 1, 1024);
+		ball.vel_x = fixed16_16(0, rand() % 2048 + 1, 1024);
 		if (rand() % 2) ball.vel_x = -ball.vel_x;
-		ball.vel_y = fixed24_8(0, rand() % 4096 + 1, 1024);
+		ball.vel_y = fixed16_16(0, rand() % 4096 + 1, 1024);
 		if (rand() % 2) ball.vel_y = -ball.vel_y;
 	}
 
@@ -381,10 +381,10 @@ int main() {
 		for (unsigned int i = 0; i < game_state.balls.size(); ++i) {
 			Ball& ball = game_state.balls[i];
 
-			ball.vel_y += fixed24_8(0, 1, 8);
+			ball.vel_y += fixed16_16(0, 1, 8);
 
-			ball.pos_x += ball.vel_x;
-			ball.pos_y += ball.vel_y;
+			ball.pos_x += fixed24_8(ball.vel_x);
+			ball.pos_y += fixed24_8(ball.vel_y);
 
 			collideBallWithBoundary(ball);
 			for (unsigned int j = i + 1; j < game_state.balls.size(); ++j) {
