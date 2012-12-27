@@ -22,6 +22,7 @@ public:
 	Fixed(T int_part) : value(int_part << FRACTIONAL_BITS) { }
 	Fixed(T int_part, T frac_part) : value((int_part << FRACTIONAL_BITS) + frac_part) { }
 	Fixed(T int_part, T frac_numer, T frac_denom) : value((int_part << FRACTIONAL_BITS) + (frac_numer << FRACTIONAL_BITS) / frac_denom) { }
+	explicit Fixed(float val) : value(static_cast<T>(val * (T(1) << FRACTIONAL_BITS))) { }
 
 	template <typename OtherT, unsigned int OtherFracBits>
 	explicit Fixed (Fixed<OtherT, OtherFracBits> o,
