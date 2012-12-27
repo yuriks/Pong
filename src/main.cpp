@@ -228,6 +228,22 @@ static const int WINDOW_HEIGHT = 240;
 
 static const int BALL_RADIUS = 8;
 
+// Splits vector vel into components parallel and perpendicular to the normal
+// of the plane n.
+void splitVector(
+		float vel_x, float vel_y, float nx, float ny,
+		float* out_par_x, float* out_par_y,
+		float* out_perp_x, float* out_perp_y)
+{
+	float v_dot_n = vel_x*nx + vel_y*ny;
+	float par_x = v_dot_n * nx;
+	float par_y = v_dot_n * ny;
+	*out_par_x = par_x;
+	*out_par_y = par_y;
+	*out_perp_x = vel_x - par_x;
+	*out_perp_y = vel_y - par_y;
+}
+
 void collideBallWithBoundary(Ball& ball) {
 	if (ball.pos_x - BALL_RADIUS < 0) {
 		ball.vel_x = -ball.vel_x;
@@ -251,13 +267,37 @@ void collideBallWithBoundary(Ball& ball) {
 }
 
 void collideBallWithBall(Ball& a, Ball& b) {
-	fixed56_8 dx = fixed56_8(a.pos_x - b.pos_x);
-	fixed56_8 dy = fixed56_8(a.pos_y - b.pos_y);
-	fixed48_16 d_sqr = dx*dx + dy*dy;
+	float dx = (a.pos_x - b.pos_x).toFloat();
+	float dy = (a.pos_y - b.pos_y).toFloat();
+	float d_sqr = dx*dx + dy*dy;
 
 	if (d_sqr < (2*BALL_RADIUS)*(2*BALL_RADIUS)) {
-		std::swap(a.vel_x, b.vel_x);
-		std::swap(a.vel_y, b.vel_y);
+		float d = std::sqrt(d_sqr);
+		float sz = 2*BALL_RADIUS - d;
+		fixed24_8 push_back_x(sz * (dx/d));
+		fixed24_8 push_back_y(sz * (dy/d));
+
+		a.pos_x += push_back_x;
+		a.pos_y += push_back_y;
+		b.pos_x -= push_back_x;
+		b.pos_y -= push_back_y;
+
+		dx /= d;
+		dy /= d;
+
+		float a_par_x, a_par_y, a_perp_x, a_perp_y;
+		float b_par_x, b_par_y, b_perp_x, b_perp_y;
+
+		splitVector(a.vel_x.toFloat(), a.vel_y.toFloat(), dx, dy,
+			&a_par_x, &a_par_y, &a_perp_x, &a_perp_y);
+		splitVector(b.vel_x.toFloat(), b.vel_y.toFloat(), -dx, -dy,
+			&b_par_x, &b_par_y, &b_perp_x, &b_perp_y);
+
+		a.vel_x = fixed16_16(b_par_x + a_perp_x);
+		a.vel_y = fixed16_16(b_par_y + a_perp_y);
+
+		b.vel_x = fixed16_16(a_par_x + b_perp_x);
+		b.vel_y = fixed16_16(a_par_y + b_perp_y);
 	}
 }
 
