@@ -24,6 +24,9 @@
     <ClCompile Include="src\stb_image.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\SpriteBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\GL3\gl3.h">
@@ -36,6 +39,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Fixed.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SpriteBuffer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
