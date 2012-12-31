@@ -26,11 +26,11 @@ void SpriteBuffer::append(const Sprite& spr) {
 	v.tex_t = img_y;
 	vertices.push_back(v);
 
-	v.pos_x = spr.x + spr.w;
+	v.pos_x = spr.x + spr.img_w;
 	v.tex_s = img_x + img_w;
 	vertices.push_back(v);
 
-	v.pos_y = spr.y + spr.h;
+	v.pos_y = spr.y + spr.img_h;
 	v.tex_t = img_y + img_h;
 	vertices.push_back(v);
 
@@ -49,8 +49,8 @@ void SpriteBuffer::append(const Sprite& spr, const SpriteMatrix& matrix) {
 
 	VertexData v;
 
-	float x = spr.w / 2.0f;
-	float y = spr.h / 2.0f;
+	float x = spr.img_w / 2.0f;
+	float y = spr.img_h / 2.0f;
 
 	float m0x = matrix.matrix[0] * x;
 	float m1y = matrix.matrix[1] * y;

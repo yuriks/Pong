@@ -9,7 +9,6 @@ struct VertexData {
 
 struct Sprite {
 	float x, y;
-	float w, h;
 	float img_x, img_y;
 	float img_h, img_w;
 };

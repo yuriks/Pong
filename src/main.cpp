@@ -293,7 +293,6 @@ int main() {
 	Sprite tmp_spr;
 	tmp_spr.img_x = tmp_spr.img_y = 0.0f;
 	tmp_spr.img_w = tmp_spr.img_h = 64.0f;
-	tmp_spr.w = tmp_spr.h = 64.0f;
 
 	tmp_spr.x = 200.0f;
 	tmp_spr.y = 100.0f;
@@ -343,8 +342,8 @@ int main() {
 	}
 
 	Sprite paddle_spr;
-	paddle_spr.w = paddle_spr.img_w = 64;
-	paddle_spr.h = paddle_spr.img_h = 16;
+	paddle_spr.img_w = 64;
+	paddle_spr.img_h = 16;
 	paddle_spr.img_x = paddle_spr.img_y = 0;
 
 	SpriteMatrix paddle_mat = {{
@@ -353,7 +352,7 @@ int main() {
 	}};
 
 	Sprite ball_spr;
-	ball_spr.w = ball_spr.h = ball_spr.img_w = ball_spr.img_h = 16;
+	ball_spr.img_w = ball_spr.img_h = 16;
 	ball_spr.img_x = 0; ball_spr.img_y = 16;
 
 	CHECK_GL_ERROR;
@@ -379,8 +378,8 @@ int main() {
 
 			paddle.pos_x += paddle_speed;
 
-			paddle_spr.x = static_cast<float>(paddle.pos_x.integer()) - paddle_spr.w / 2;
-			paddle_spr.y = static_cast<float>(paddle.pos_y.integer()) - paddle_spr.h / 2;
+			paddle_spr.x = static_cast<float>(paddle.pos_x.integer()) - paddle_spr.img_w / 2;
+			paddle_spr.y = static_cast<float>(paddle.pos_y.integer()) - paddle_spr.img_h / 2;
 			sprite_buffer.append(paddle_spr, paddle_mat);
 		}
 
@@ -398,8 +397,8 @@ int main() {
 				collideBallWithBall(ball, game_state.balls[j]);
 			}
 
-			ball_spr.x = static_cast<float>(ball.pos_x.integer()) - ball_spr.w / 2;
-			ball_spr.y = static_cast<float>(ball.pos_y.integer()) - ball_spr.h / 2;
+			ball_spr.x = static_cast<float>(ball.pos_x.integer()) - ball_spr.img_w / 2;
+			ball_spr.y = static_cast<float>(ball.pos_y.integer()) - ball_spr.img_h / 2;
 			sprite_buffer.append(ball_spr);
 		}
 
