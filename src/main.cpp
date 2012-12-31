@@ -325,7 +325,7 @@ int main() {
 
 	Sprite ball_spr;
 	ball_spr.w = ball_spr.h = ball_spr.img_w = ball_spr.img_h = 16;
-	ball_spr.img_x = 16; ball_spr.img_y = 0;
+	ball_spr.img_x = 0; ball_spr.img_y = 16;
 
 	CHECK_GL_ERROR;
 
