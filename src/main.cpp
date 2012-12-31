@@ -135,8 +135,9 @@ struct Paddle {
 };
 
 static const fixed24_8 PADDLE_MOVEMENT_SPEED(4);
-static const fixed8_24 PADDLE_MAX_ROTATION(20);
-static const fixed8_24 PADDLE_ROTATION_RATE(1);
+static const fixed8_24 PADDLE_MAX_ROTATION(15);
+static const fixed8_24 PADDLE_ROTATION_RATE(3);
+static const fixed8_24 PADDLE_ROTATION_RETURN_RATE(1);
 
 struct GameState {
 	Paddle paddle;
@@ -223,6 +224,30 @@ void collideBallWithBall(Ball& a, Ball& b) {
 		b.vel_x = fixed16_16(A*a_par_x + B*b_par_x + friction*b_perp_x);
 		b.vel_y = fixed16_16(A*a_par_y + B*b_par_y + friction*b_perp_y);
 	}
+}
+
+template <typename T>
+T stepTowards(T initial, T target, T step) {
+	if (initial < target) {
+		initial += step;
+		if (initial > target)
+			return target;
+		return initial;
+	} else if (initial > target) {
+		initial -= step;
+		if (initial < target)
+			return target;
+		return initial;
+	} else {
+		return initial;
+	}
+}
+
+template <typename T>
+T clamp(T min, T val, T max) {
+	if (val < min) return min;
+	else if (val > max) return max;
+	else return val;
 }
 
 int main() {
@@ -354,20 +379,28 @@ int main() {
 			Paddle& paddle = game_state.paddle;
 
 			fixed24_8 paddle_speed(0);
+			fixed8_24 rotation = 0;
 			if (glfwGetKey(GLFW_KEY_LEFT)) {
 				paddle_speed -= PADDLE_MOVEMENT_SPEED;
+				rotation -= PADDLE_ROTATION_RATE;
 			}
 			if (glfwGetKey(GLFW_KEY_RIGHT)) {
 				paddle_speed += PADDLE_MOVEMENT_SPEED;
+				rotation += PADDLE_ROTATION_RATE;
 			}
 
+			if (rotation == 0) {
+				paddle.rotation = stepTowards(paddle.rotation, fixed8_24(0), PADDLE_ROTATION_RETURN_RATE);
+			} else {
+				paddle.rotation = clamp(-PADDLE_MAX_ROTATION, paddle.rotation + rotation, PADDLE_MAX_ROTATION);
+			}
 			paddle.pos_x += paddle_speed;
 
-			paddle_spr.x = static_cast<float>(paddle.pos_x.integer()) - paddle_spr.img_w / 2;
-			paddle_spr.y = static_cast<float>(paddle.pos_y.integer()) - paddle_spr.img_h / 2;
+			paddle_spr.x = static_cast<float>(paddle.pos_x.integer());
+			paddle_spr.y = static_cast<float>(paddle.pos_y.integer());
 
 			SpriteMatrix paddle_mat;
-			paddle_mat.loadIdentity().rotate(paddle_spr.x);
+			paddle_mat.loadIdentity().rotate(paddle.rotation.toFloat());
 			sprite_buffer.append(paddle_spr, paddle_mat);
 		}
 
