@@ -127,7 +127,19 @@ struct Ball {
 	static const int RADIUS = 8;
 };
 
+struct Paddle {
+	fixed24_8 pos_x;
+	fixed24_8 pos_y;
+
+	fixed8_24 rotation;
+};
+
+static const fixed24_8 PADDLE_MOVEMENT_SPEED(4);
+static const fixed8_24 PADDLE_MAX_ROTATION(20);
+static const fixed8_24 PADDLE_ROTATION_RATE(1);
+
 struct GameState {
+	Paddle paddle;
 	std::array<Ball, 8> balls;
 };
 
@@ -311,6 +323,13 @@ int main() {
 	///////////////////////////
 	GameState game_state;
 
+	{
+		Paddle& p = game_state.paddle;
+		p.pos_x = WINDOW_WIDTH / 2;
+		p.pos_y = WINDOW_HEIGHT - 32;
+		p.rotation = 0;
+	}
+
 	for (unsigned int i = 0; i < game_state.balls.size(); ++i) {
 		Ball& ball = game_state.balls[i];
 
@@ -322,6 +341,11 @@ int main() {
 		ball.vel_y = fixed16_16(0, rand() % 4096 + 1, 1024);
 		if (rand() % 2) ball.vel_y = -ball.vel_y;
 	}
+
+	Sprite paddle_spr;
+	paddle_spr.w = paddle_spr.img_w = 64;
+	paddle_spr.h = paddle_spr.img_h = 16;
+	paddle_spr.img_x = paddle_spr.img_y = 0;
 
 	Sprite ball_spr;
 	ball_spr.w = ball_spr.h = ball_spr.img_w = ball_spr.img_h = 16;
@@ -335,6 +359,25 @@ int main() {
 	bool running = true;
 	while (running) {
 		sprite_buffer.clear();
+
+		/* Update paddle */
+		{
+			Paddle& paddle = game_state.paddle;
+
+			fixed24_8 paddle_speed(0);
+			if (glfwGetKey(GLFW_KEY_LEFT)) {
+				paddle_speed -= PADDLE_MOVEMENT_SPEED;
+			}
+			if (glfwGetKey(GLFW_KEY_RIGHT)) {
+				paddle_speed += PADDLE_MOVEMENT_SPEED;
+			}
+
+			paddle.pos_x += paddle_speed;
+
+			paddle_spr.x = static_cast<float>(paddle.pos_x.integer()) - paddle_spr.w / 2;
+			paddle_spr.y = static_cast<float>(paddle.pos_y.integer()) - paddle_spr.h / 2;
+			sprite_buffer.append(paddle_spr);
+		}
 
 		/* Update balls */
 		for (unsigned int i = 0; i < game_state.balls.size(); ++i) {
