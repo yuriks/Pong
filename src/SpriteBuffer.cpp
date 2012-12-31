@@ -41,6 +41,46 @@ void SpriteBuffer::append(const Sprite& spr) {
 	vertex_count += 1;
 }
 
+void SpriteBuffer::append(const Sprite& spr, const SpriteMatrix& matrix) {
+	float img_x = spr.img_x / tex_width;
+	float img_w = spr.img_w / tex_width;
+	float img_y = spr.img_y / tex_height;
+	float img_h = spr.img_h / tex_height;
+
+	VertexData v;
+
+	float x = spr.w / 2.0f;
+	float y = spr.h / 2.0f;
+
+	float m0x = matrix.matrix[0] * x;
+	float m1y = matrix.matrix[1] * y;
+	float m2x = matrix.matrix[2] * x;
+	float m3y = matrix.matrix[3] * y;
+
+	v.pos_x = spr.x - m0x - m1y;
+	v.pos_y = spr.y - m2x - m3y;
+	v.tex_s = img_x;
+	v.tex_t = img_y;
+	vertices.push_back(v);
+
+	v.pos_x = spr.x + m0x - m1y;
+	v.pos_y = spr.y + m2x - m3y;
+	v.tex_s = img_x + img_w;
+	vertices.push_back(v);
+
+	v.pos_x = spr.x + m0x + m1y;
+	v.pos_y = spr.y + m2x + m3y;
+	v.tex_t = img_y + img_h;
+	vertices.push_back(v);
+
+	v.pos_x = spr.x - m0x + m1y;
+	v.pos_y = spr.y - m2x + m3y;
+	v.tex_s = img_x;
+	vertices.push_back(v);
+
+	vertex_count += 1;
+}
+
 // Returns true if indices need to be updated
 bool SpriteBuffer::generate_indices() {
 	if (index_count >= vertex_count)

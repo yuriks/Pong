@@ -14,6 +14,10 @@ struct Sprite {
 	float img_h, img_w;
 };
 
+struct SpriteMatrix {
+	GLfloat matrix[4]; // Row-major storage
+};
+
 struct SpriteBuffer {
 	std::vector<VertexData> vertices;
 	std::vector<GLushort> indices;
@@ -28,6 +32,8 @@ struct SpriteBuffer {
 
 	void clear();
 	void append(const Sprite& spr);
+	// Careful: spr position gives center of sprite, not top-left
+	void append(const Sprite& spr, const SpriteMatrix& matrix);
 
 	// Returns true if indices need to be updated
 	bool generate_indices();
