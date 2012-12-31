@@ -123,6 +123,8 @@ struct Ball {
 
 	fixed16_16 vel_x;
 	fixed16_16 vel_y;
+
+	static const int RADIUS = 8;
 };
 
 struct GameState {
@@ -131,8 +133,6 @@ struct GameState {
 
 static const int WINDOW_WIDTH = 320;
 static const int WINDOW_HEIGHT = 240;
-
-static const int BALL_RADIUS = 8;
 
 // Splits vector vel into components parallel and perpendicular to the normal
 // of the plane n.
@@ -151,24 +151,24 @@ void splitVector(
 }
 
 void collideBallWithBoundary(Ball& ball) {
-	if (ball.pos_x - BALL_RADIUS < 0) {
+	if (ball.pos_x - Ball::RADIUS < 0) {
 		ball.vel_x = -ball.vel_x;
-		ball.pos_x = BALL_RADIUS;
+		ball.pos_x = Ball::RADIUS;
 	}
 
-	if (ball.pos_x + BALL_RADIUS > WINDOW_WIDTH) {
+	if (ball.pos_x + Ball::RADIUS > WINDOW_WIDTH) {
 		ball.vel_x = -ball.vel_x;
-		ball.pos_x = WINDOW_WIDTH - BALL_RADIUS;
+		ball.pos_x = WINDOW_WIDTH - Ball::RADIUS;
 	}
 
-	if (ball.pos_y - BALL_RADIUS < 0) {
+	if (ball.pos_y - Ball::RADIUS < 0) {
 		ball.vel_y = -ball.vel_y;
-		ball.pos_y = BALL_RADIUS;
+		ball.pos_y = Ball::RADIUS;
 	}
 
-	if (ball.pos_y + BALL_RADIUS > WINDOW_HEIGHT) {
+	if (ball.pos_y + Ball::RADIUS > WINDOW_HEIGHT) {
 		ball.vel_y = -ball.vel_y;
-		ball.pos_y = WINDOW_HEIGHT - BALL_RADIUS;
+		ball.pos_y = WINDOW_HEIGHT - Ball::RADIUS;
 	}
 }
 
@@ -177,9 +177,9 @@ void collideBallWithBall(Ball& a, Ball& b) {
 	float dy = (a.pos_y - b.pos_y).toFloat();
 	float d_sqr = dx*dx + dy*dy;
 
-	if (d_sqr < (2*BALL_RADIUS)*(2*BALL_RADIUS)) {
+	if (d_sqr < (2*Ball::RADIUS)*(2*Ball::RADIUS)) {
 		float d = std::sqrt(d_sqr);
-		float sz = BALL_RADIUS - d / 2.0f;
+		float sz = Ball::RADIUS - d / 2.0f;
 		fixed24_8 push_back_x(sz * (dx/d));
 		fixed24_8 push_back_y(sz * (dy/d));
 
