@@ -290,16 +290,6 @@ int main() {
 	sprite_buffer.tex_width = static_cast<float>(tex_width);
 	sprite_buffer.tex_height = static_cast<float>(tex_height);
 
-	Sprite tmp_spr;
-	tmp_spr.img_x = tmp_spr.img_y = 0.0f;
-	tmp_spr.img_w = tmp_spr.img_h = 64.0f;
-
-	tmp_spr.x = 200.0f;
-	tmp_spr.y = 100.0f;
-	sprite_buffer.append(tmp_spr);
-	tmp_spr.x = tmp_spr.y = -0.1f;
-	sprite_buffer.append(tmp_spr);
-
 	GLuint vao_id;
 	glGenVertexArrays(1, &vao_id);
 	glBindVertexArray(vao_id);
