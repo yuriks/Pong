@@ -306,6 +306,9 @@ int main() {
 	glGenBuffers(1, &ibo_id);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_id);
 
+	///////////////////////////
+	// Initialize game state //
+	///////////////////////////
 	GameState game_state;
 
 	for (unsigned int i = 0; i < game_state.balls.size(); ++i) {
@@ -326,10 +329,14 @@ int main() {
 
 	CHECK_GL_ERROR;
 
+	////////////////////
+	// Main game loop //
+	////////////////////
 	bool running = true;
 	while (running) {
 		sprite_buffer.clear();
 
+		/* Update balls */
 		for (unsigned int i = 0; i < game_state.balls.size(); ++i) {
 			Ball& ball = game_state.balls[i];
 
@@ -348,6 +355,7 @@ int main() {
 			sprite_buffer.append(ball_spr);
 		}
 
+		/* Draw scene */
 		// More superfluous drawcalls to change the GPU into high-performance mode? Sure, why not.
 		glClear(GL_COLOR_BUFFER_BIT);
 		for (int i = 0; i < 1000; ++i) {
