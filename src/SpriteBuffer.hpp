@@ -14,7 +14,7 @@ struct Sprite {
 };
 
 struct SpriteMatrix {
-	GLfloat matrix[4]; // Row-major storage
+	GLfloat m[4]; // Row-major storage
 };
 
 struct SpriteBuffer {

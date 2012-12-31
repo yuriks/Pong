@@ -52,10 +52,10 @@ void SpriteBuffer::append(const Sprite& spr, const SpriteMatrix& matrix) {
 	float x = spr.img_w / 2.0f;
 	float y = spr.img_h / 2.0f;
 
-	float m0x = matrix.matrix[0] * x;
-	float m1y = matrix.matrix[1] * y;
-	float m2x = matrix.matrix[2] * x;
-	float m3y = matrix.matrix[3] * y;
+	float m0x = matrix.m[0] * x;
+	float m1y = matrix.m[1] * y;
+	float m2x = matrix.m[2] * x;
+	float m3y = matrix.m[3] * y;
 
 	v.pos_x = spr.x - m0x - m1y;
 	v.pos_y = spr.y - m2x - m3y;
