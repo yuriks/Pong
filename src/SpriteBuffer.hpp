@@ -15,6 +15,12 @@ struct Sprite {
 
 struct SpriteMatrix {
 	GLfloat m[4]; // Row-major storage
+
+	SpriteMatrix& loadIdentity();
+	SpriteMatrix& multiply(const SpriteMatrix& l);
+	SpriteMatrix& rotate(float degrees);
+	SpriteMatrix& scale(float x, float y);
+	SpriteMatrix& shear(float x, float y);
 };
 
 struct SpriteBuffer {

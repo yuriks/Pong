@@ -336,11 +336,6 @@ int main() {
 	paddle_spr.img_h = 16;
 	paddle_spr.img_x = paddle_spr.img_y = 0;
 
-	SpriteMatrix paddle_mat = {{
-		2.0f, 0.0f,
-		0.0f, 2.0f
-	}};
-
 	Sprite ball_spr;
 	ball_spr.img_w = ball_spr.img_h = 16;
 	ball_spr.img_x = 0; ball_spr.img_y = 16;
@@ -370,6 +365,9 @@ int main() {
 
 			paddle_spr.x = static_cast<float>(paddle.pos_x.integer()) - paddle_spr.img_w / 2;
 			paddle_spr.y = static_cast<float>(paddle.pos_y.integer()) - paddle_spr.img_h / 2;
+
+			SpriteMatrix paddle_mat;
+			paddle_mat.loadIdentity().rotate(paddle_spr.x);
 			sprite_buffer.append(paddle_spr, paddle_mat);
 		}
 

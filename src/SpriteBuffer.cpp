@@ -2,6 +2,62 @@
 
 #include "GL3/gl3w.h"
 
+SpriteMatrix& SpriteMatrix::loadIdentity() {
+	m[0] = m[3] = 1.0f;
+	m[1] = m[2] = 0.0f;
+
+	return *this;
+}
+
+SpriteMatrix& SpriteMatrix::multiply(const SpriteMatrix& l) {
+	SpriteMatrix r = *this;
+
+	m[0] = l.m[0]*r.m[0] + l.m[1]*r.m[2];
+	m[1] = l.m[0]*r.m[1] + l.m[1]*r.m[3];
+	m[2] = l.m[2]*r.m[0] + l.m[3]*r.m[2];
+	m[3] = l.m[2]*r.m[1] + l.m[3]*r.m[3];
+
+	return *this;
+}
+
+static const float DOUBLE_PI = 6.283185482025146484375f;
+
+SpriteMatrix& SpriteMatrix::rotate(float degrees) {
+	float t = degrees / 360.0f * DOUBLE_PI;
+
+	float sin_t = std::sin(t);
+	float cos_t = std::cos(t);
+
+	SpriteMatrix rotate_m = {{
+		cos_t, -sin_t,
+		sin_t, cos_t
+	}};
+
+	return multiply(rotate_m);
+}
+
+SpriteMatrix& SpriteMatrix::scale(float x, float y) {
+	m[0] *= x;
+	m[1] *= x;
+	m[2] *= y;
+	m[3] *= y;
+
+	return *this;
+}
+
+SpriteMatrix& SpriteMatrix::shear(float x, float y) {
+	SpriteMatrix r = *this;
+
+	m[0] = r.m[0] + x*r.m[2];
+	m[1] = r.m[1] + x*r.m[3];
+	m[2] = y*r.m[0] + r.m[2];
+	m[3] = y*r.m[1] + r.m[3];
+
+	return *this;
+}
+
+///////////////////////////////////////////////////////////
+
 SpriteBuffer::SpriteBuffer() :
 	vertex_count(0), index_count(0),
 	tex_width(1.0f), tex_height(1.0f)
