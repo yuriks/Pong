@@ -421,7 +421,6 @@ int main() {
 
 	bool running = true;
 	while (running) {
-		glClear(GL_COLOR_BUFFER_BIT);
 		sprite_buffer.clear();
 
 		for (unsigned int i = 0; i < game_state.balls.size(); ++i) {
@@ -442,6 +441,14 @@ int main() {
 			sprite_buffer.append(ball_spr);
 		}
 
+		// More superfluous drawcalls to change the GPU into high-performance mode? Sure, why not.
+		glClear(GL_COLOR_BUFFER_BIT);
+		for (int i = 0; i < 1000; ++i) {
+			sprite_buffer.upload();
+			sprite_buffer.draw();
+		}
+
+		glClear(GL_COLOR_BUFFER_BIT);
 		sprite_buffer.upload();
 		sprite_buffer.draw();
 
