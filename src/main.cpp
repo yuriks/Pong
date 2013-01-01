@@ -141,6 +141,8 @@ static const fixed8_24 PADDLE_ROTATION_RATE(3);
 static const fixed8_24 PADDLE_ROTATION_RETURN_RATE(1);
 
 struct GameState {
+	RandomGenerator rng;
+
 	Paddle paddle;
 	std::vector<Ball> balls;
 };
@@ -234,8 +236,6 @@ void collideBallWithBall(Ball& a, Ball& b) {
 }
 
 int main() {
-	RandomGenerator rg(123);
-
 	if (!glfwInit()) {
 		return 1;
 	}
@@ -319,6 +319,8 @@ int main() {
 	// Initialize game state //
 	///////////////////////////
 	GameState game_state;
+	RandomGenerator& rng = game_state.rng;
+	rng.seed(123);
 
 	{
 		Paddle& p = game_state.paddle;
@@ -333,10 +335,10 @@ int main() {
 		ball.pos_x = (i + 1) * WINDOW_WIDTH / (game_state.balls.size() + 1);
 		ball.pos_y = WINDOW_HEIGHT / 2;
 
-		ball.vel_x = fixed16_16(0, randRange(rg, 1, 2048), 1024);
-		if (randBool(rg)) ball.vel_x = -ball.vel_x;
-		ball.vel_y = fixed16_16(0, randRange(rg, 1, 4096), 1024);
-		if (randBool(rg)) ball.vel_y = -ball.vel_y;
+		ball.vel_x = fixed16_16(0, randRange(rng, 1, 2048), 1024);
+		if (randBool(rng)) ball.vel_x = -ball.vel_x;
+		ball.vel_y = fixed16_16(0, randRange(rng, 1, 4096), 1024);
+		if (randBool(rng)) ball.vel_y = -ball.vel_y;
 	}
 
 	Sprite paddle_spr;
@@ -394,7 +396,7 @@ int main() {
 			gem_spawn_timer = GEM_SPAWN_INTERVAL;
 
 			Ball b;
-			b.pos_x = randRange(rg, WINDOW_WIDTH * 1 / 6, WINDOW_WIDTH * 5 / 6);
+			b.pos_x = randRange(rng, WINDOW_WIDTH * 1 / 6, WINDOW_WIDTH * 5 / 6);
 			b.pos_y = -10;
 			b.vel_x = b.vel_y = 0;
 
