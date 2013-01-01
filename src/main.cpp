@@ -9,6 +9,7 @@
 #include <vector>
 #include <cstdint>
 #include <array>
+#include "util.hpp"
 #include "Fixed.hpp"
 #include "SpriteBuffer.hpp"
 
@@ -224,30 +225,6 @@ void collideBallWithBall(Ball& a, Ball& b) {
 		b.vel_x = fixed16_16(A*a_par_x + B*b_par_x + friction*b_perp_x);
 		b.vel_y = fixed16_16(A*a_par_y + B*b_par_y + friction*b_perp_y);
 	}
-}
-
-template <typename T>
-T stepTowards(T initial, T target, T step) {
-	if (initial < target) {
-		initial += step;
-		if (initial > target)
-			return target;
-		return initial;
-	} else if (initial > target) {
-		initial -= step;
-		if (initial < target)
-			return target;
-		return initial;
-	} else {
-		return initial;
-	}
-}
-
-template <typename T>
-T clamp(T min, T val, T max) {
-	if (val < min) return min;
-	else if (val > max) return max;
-	else return val;
 }
 
 int main() {

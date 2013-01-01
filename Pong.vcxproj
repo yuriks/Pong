@@ -87,6 +87,7 @@
     <ClInclude Include="src\GL3\gl3w.h" />
     <ClInclude Include="src\SpriteBuffer.hpp" />
     <ClInclude Include="src\stb_image.h" />
+    <ClInclude Include="src\util.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
