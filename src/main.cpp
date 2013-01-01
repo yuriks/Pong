@@ -387,9 +387,7 @@ int main() {
 			paddle_spr.x = static_cast<float>(paddle.pos_x.integer());
 			paddle_spr.y = static_cast<float>(paddle.pos_y.integer());
 
-			SpriteMatrix paddle_mat;
-			paddle_mat.loadIdentity().rotate(paddle.rotation.toFloat());
-			sprite_buffer.append(paddle_spr, paddle_mat);
+			sprite_buffer.append(paddle_spr, SpriteMatrix().loadIdentity().rotate(paddle.rotation.toFloat()));
 		}
 
 		if (--gem_spawn_timer == 0) {
