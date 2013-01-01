@@ -228,7 +228,7 @@ void collideBallWithBall(Ball& a, Ball& b) {
 }
 
 int main() {
-	srand(123);
+	RandomGenerator rg(123);
 
 	if (!glfwInit()) {
 		return 1;
@@ -327,10 +327,10 @@ int main() {
 		ball.pos_x = (i + 1) * WINDOW_WIDTH / (game_state.balls.size() + 1);
 		ball.pos_y = WINDOW_HEIGHT / 2;
 
-		ball.vel_x = fixed16_16(0, rand() % 2048 + 1, 1024);
-		if (rand() % 2) ball.vel_x = -ball.vel_x;
-		ball.vel_y = fixed16_16(0, rand() % 4096 + 1, 1024);
-		if (rand() % 2) ball.vel_y = -ball.vel_y;
+		ball.vel_x = fixed16_16(0, randRange(rg, 1, 2048), 1024);
+		if (randBool(rg)) ball.vel_x = -ball.vel_x;
+		ball.vel_y = fixed16_16(0, randRange(rg, 1, 4096), 1024);
+		if (randBool(rg)) ball.vel_y = -ball.vel_y;
 	}
 
 	Sprite paddle_spr;
