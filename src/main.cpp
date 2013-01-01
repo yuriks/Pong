@@ -142,7 +142,7 @@ static const fixed8_24 PADDLE_ROTATION_RETURN_RATE(1);
 
 struct GameState {
 	Paddle paddle;
-	std::array<Ball, 8> balls;
+	std::vector<Ball> balls;
 };
 
 static const int WINDOW_WIDTH = 320;
@@ -165,21 +165,27 @@ void splitVector(
 }
 
 void collideBallWithBoundary(Ball& ball) {
+	// Left boundary
 	if (ball.pos_x - Ball::RADIUS < 0) {
 		ball.vel_x = -ball.vel_x;
 		ball.pos_x = Ball::RADIUS;
 	}
 
+	// Right boundary
 	if (ball.pos_x + Ball::RADIUS > WINDOW_WIDTH) {
 		ball.vel_x = -ball.vel_x;
 		ball.pos_x = WINDOW_WIDTH - Ball::RADIUS;
 	}
 
+	// Top boundary
+	/*
 	if (ball.pos_y - Ball::RADIUS < 0) {
 		ball.vel_y = -ball.vel_y;
 		ball.pos_y = Ball::RADIUS;
 	}
+	*/
 
+	// Bottom boundary
 	if (ball.pos_y + Ball::RADIUS > WINDOW_HEIGHT) {
 		ball.vel_y = -ball.vel_y;
 		ball.pos_y = WINDOW_HEIGHT - Ball::RADIUS;
@@ -342,6 +348,9 @@ int main() {
 	ball_spr.img_w = ball_spr.img_h = 16;
 	ball_spr.img_x = 0; ball_spr.img_y = 16;
 
+	static const int GEM_SPAWN_INTERVAL = 60*5;
+	int gem_spawn_timer = GEM_SPAWN_INTERVAL;
+
 	CHECK_GL_ERROR;
 
 	////////////////////
@@ -379,6 +388,17 @@ int main() {
 			SpriteMatrix paddle_mat;
 			paddle_mat.loadIdentity().rotate(paddle.rotation.toFloat());
 			sprite_buffer.append(paddle_spr, paddle_mat);
+		}
+
+		if (--gem_spawn_timer == 0) {
+			gem_spawn_timer = GEM_SPAWN_INTERVAL;
+
+			Ball b;
+			b.pos_x = randRange(rg, WINDOW_WIDTH * 1 / 6, WINDOW_WIDTH * 5 / 6);
+			b.pos_y = -10;
+			b.vel_x = b.vel_y = 0;
+
+			game_state.balls.push_back(b);
 		}
 
 		/* Update balls */
