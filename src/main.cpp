@@ -274,18 +274,6 @@ int main() {
 		p.rotation = 0;
 	}
 
-	for (unsigned int i = 0; i < game_state.balls.size(); ++i) {
-		Ball& ball = game_state.balls[i];
-
-		ball.pos_x = (i + 1) * WINDOW_WIDTH / (game_state.balls.size() + 1);
-		ball.pos_y = WINDOW_HEIGHT / 2;
-
-		ball.vel_x = fixed16_16(0, randRange(rng, 1, 2048), 1024);
-		if (randBool(rng)) ball.vel_x = -ball.vel_x;
-		ball.vel_y = fixed16_16(0, randRange(rng, 1, 4096), 1024);
-		if (randBool(rng)) ball.vel_y = -ball.vel_y;
-	}
-
 	Sprite paddle_spr;
 	paddle_spr.color = makeColor(255, 255, 255, 255);
 	paddle_spr.img_w = 64;
@@ -337,6 +325,7 @@ int main() {
 			sprite_buffer.append(paddle_spr, paddle.getSpriteMatrix());
 		}
 
+		/* Spawn new gems */
 		if (--gem_spawn_timer == 0) {
 			gem_spawn_timer = GEM_SPAWN_INTERVAL;
 
