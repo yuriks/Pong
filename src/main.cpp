@@ -29,7 +29,7 @@ void debugPoint(int x, int y) {
 	debug_sprites.push_back(spr);
 }
 
-struct Ball {
+struct Gem {
 	fixed24_8 pos_x;
 	fixed24_8 pos_y;
 
@@ -59,7 +59,7 @@ struct GameState {
 	RandomGenerator rng;
 
 	Paddle paddle;
-	std::vector<Ball> balls;
+	std::vector<Gem> gems;
 };
 
 static const int WINDOW_WIDTH = 320;
@@ -73,41 +73,41 @@ void splitVector(vec2 vel, vec2 n, vec2* out_par, vec2* out_perp) {
 	*out_perp = vel - par;
 }
 
-void collideBallWithBoundary(Ball& ball) {
+void collideBallWithBoundary(Gem& ball) {
 	// Left boundary
-	if (ball.pos_x - Ball::RADIUS < 0) {
+	if (ball.pos_x - Gem::RADIUS < 0) {
 		ball.vel_x = -ball.vel_x;
-		ball.pos_x = Ball::RADIUS;
+		ball.pos_x = Gem::RADIUS;
 	}
 
 	// Right boundary
-	if (ball.pos_x + Ball::RADIUS > WINDOW_WIDTH) {
+	if (ball.pos_x + Gem::RADIUS > WINDOW_WIDTH) {
 		ball.vel_x = -ball.vel_x;
-		ball.pos_x = WINDOW_WIDTH - Ball::RADIUS;
+		ball.pos_x = WINDOW_WIDTH - Gem::RADIUS;
 	}
 
 	// Top boundary
 	/*
-	if (ball.pos_y - Ball::RADIUS < 0) {
+	if (ball.pos_y - Gem::RADIUS < 0) {
 		ball.vel_y = -ball.vel_y;
-		ball.pos_y = Ball::RADIUS;
+		ball.pos_y = Gem::RADIUS;
 	}
 	*/
 
 	// Bottom boundary
-	if (ball.pos_y + Ball::RADIUS > WINDOW_HEIGHT) {
+	if (ball.pos_y + Gem::RADIUS > WINDOW_HEIGHT) {
 		ball.vel_y = -ball.vel_y;
-		ball.pos_y = WINDOW_HEIGHT - Ball::RADIUS;
+		ball.pos_y = WINDOW_HEIGHT - Gem::RADIUS;
 	}
 }
 
-void collideBallWithBall(Ball& a, Ball& b) {
+void collideBallWithBall(Gem& a, Gem& b) {
 	vec2 dv = {(a.pos_x - b.pos_x).toFloat(), (a.pos_y - b.pos_y).toFloat()};
 	float d_sqr = length_sqr(dv);
 
-	if (d_sqr < (2*Ball::RADIUS)*(2*Ball::RADIUS)) {
+	if (d_sqr < (2*Gem::RADIUS)*(2*Gem::RADIUS)) {
 		float d = std::sqrt(d_sqr);
-		float sz = Ball::RADIUS - d / 2.0f;
+		float sz = Gem::RADIUS - d / 2.0f;
 		fixed24_8 push_back_x(sz * (dv.x/d));
 		fixed24_8 push_back_y(sz * (dv.y/d));
 
@@ -161,7 +161,7 @@ vec2 pointLineSegmentNearestPoint(vec2 p, vec2 a, vec2 b) {
 	}
 }
 
-void collideBallWithPaddle(Ball& ball, const Paddle& paddle) {
+void collideBallWithPaddle(Gem& ball, const Paddle& paddle) {
 	SpriteMatrix matrix = paddle.getSpriteMatrix();
 
 	// Left sphere
@@ -181,7 +181,7 @@ void collideBallWithPaddle(Ball& ball, const Paddle& paddle) {
 	vec2 nearest_point = pointLineSegmentNearestPoint(rel_ball, left, right);
 	vec2 penetration = rel_ball - nearest_point;
 	float d_sqr = length_sqr(penetration);
-	float r = PADDLE_RADIUS + Ball::RADIUS;
+	float r = PADDLE_RADIUS + Gem::RADIUS;
 	if (d_sqr < r*r) {
 		float d = std::sqrt(d_sqr);
 		float sz = r - d;
@@ -329,17 +329,17 @@ int main() {
 		if (--gem_spawn_timer == 0) {
 			gem_spawn_timer = GEM_SPAWN_INTERVAL;
 
-			Ball b;
+			Gem b;
 			b.pos_x = randRange(rng, WINDOW_WIDTH * 1 / 6, WINDOW_WIDTH * 5 / 6);
 			b.pos_y = -10;
 			b.vel_x = b.vel_y = 0;
 
-			game_state.balls.push_back(b);
+			game_state.gems.push_back(b);
 		}
 
 		/* Update balls */
-		for (unsigned int i = 0; i < game_state.balls.size(); ++i) {
-			Ball& ball = game_state.balls[i];
+		for (unsigned int i = 0; i < game_state.gems.size(); ++i) {
+			Gem& ball = game_state.gems[i];
 
 			ball.vel_y += fixed16_16(0, 1, 8);
 
@@ -347,8 +347,8 @@ int main() {
 			ball.pos_y += fixed24_8(ball.vel_y);
 
 			collideBallWithBoundary(ball);
-			for (unsigned int j = i + 1; j < game_state.balls.size(); ++j) {
-				collideBallWithBall(ball, game_state.balls[j]);
+			for (unsigned int j = i + 1; j < game_state.gems.size(); ++j) {
+				collideBallWithBall(ball, game_state.gems[j]);
 			}
 			collideBallWithPaddle(ball, game_state.paddle);
 
