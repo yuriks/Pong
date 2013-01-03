@@ -147,6 +147,10 @@ struct Paddle {
 	fixed24_8 pos_y;
 
 	fixed8_24 rotation;
+
+	SpriteMatrix getSpriteMatrix() const {
+		return SpriteMatrix().loadIdentity().rotate(rotation.toFloat());
+	};
 };
 
 static const fixed24_8 PADDLE_MOVEMENT_SPEED(4);
@@ -239,7 +243,66 @@ void collideBallWithBall(Ball& a, Ball& b) {
 
 		b.vel_x = fixed16_16(b_vel.x);
 		b.vel_y = fixed16_16(b_vel.y);
+	}
+}
 
+// Returns the nearest point in line segment a-b to point p.
+vec2 pointLineSegmentNearestPoint(vec2 p, vec2 a, vec2 b) {
+	// Taken from http://stackoverflow.com/a/1501725
+	const float l2 = length_sqr(b - a);
+	if (l2 == 0.0f) {
+		return a;
+	}
+
+	const float t = dot(p - a, b - a) / l2;
+	if (t < 0.0f) {
+		return a;
+	} else if (t > 1.0f) {
+		return b;
+	} else {
+		return a + t * (b - a);
+	}
+}
+
+void collideBallWithPaddle(Ball& ball, const Paddle& paddle) {
+	SpriteMatrix matrix = paddle.getSpriteMatrix();
+
+	// Left sphere
+	vec2 left = {-24, 0};
+	// Right sphere
+	vec2 right = {24, 0};
+
+	matrix.transform(&left.x, &left.y);
+	matrix.transform(&right.x, &right.y);
+
+	static const int PADDLE_RADIUS = 8;
+
+	fixed24_8 rel_ball_x = ball.pos_x - paddle.pos_x;
+	fixed24_8 rel_ball_y = ball.pos_y - paddle.pos_y;
+	vec2 rel_ball = {rel_ball_x.toFloat(), rel_ball_y.toFloat()};
+
+	vec2 nearest_point = pointLineSegmentNearestPoint(rel_ball, left, right);
+	vec2 penetration = rel_ball - nearest_point;
+	float d_sqr = length_sqr(penetration);
+	float r = PADDLE_RADIUS + Ball::RADIUS;
+	if (d_sqr < r*r) {
+		float d = std::sqrt(d_sqr);
+		float sz = r - d;
+
+		vec2 normal = penetration / d;
+		fixed24_8 push_back_x(sz * normal.x);
+		fixed24_8 push_back_y(sz * normal.y);
+
+		ball.pos_x += push_back_x;
+		ball.pos_y += push_back_y;
+
+		vec2 par, perp;
+		vec2 vel = {ball.vel_x.toFloat(), ball.vel_y.toFloat()};
+		splitVector(vel, normal, &par, &perp);
+		vel = perp - par;
+
+		ball.vel_x = fixed16_16(vel.x);
+		ball.vel_y = fixed16_16(vel.y);
 	}
 }
 
@@ -395,7 +458,7 @@ int main() {
 			paddle_spr.x = static_cast<float>(paddle.pos_x.integer());
 			paddle_spr.y = static_cast<float>(paddle.pos_y.integer());
 
-			sprite_buffer.append(paddle_spr, SpriteMatrix().loadIdentity().rotate(paddle.rotation.toFloat()));
+			sprite_buffer.append(paddle_spr, paddle.getSpriteMatrix());
 		}
 
 		if (--gem_spawn_timer == 0) {
@@ -422,6 +485,7 @@ int main() {
 			for (unsigned int j = i + 1; j < game_state.balls.size(); ++j) {
 				collideBallWithBall(ball, game_state.balls[j]);
 			}
+			collideBallWithPaddle(ball, game_state.paddle);
 
 			ball_spr.x = static_cast<float>(ball.pos_x.integer()) - ball_spr.img_w / 2;
 			ball_spr.y = static_cast<float>(ball.pos_y.integer()) - ball_spr.img_h / 2;

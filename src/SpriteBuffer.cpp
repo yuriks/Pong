@@ -56,6 +56,16 @@ SpriteMatrix& SpriteMatrix::shear(float x, float y) {
 	return *this;
 }
 
+void SpriteMatrix::transform(float* x, float* y) {
+	float m0x = m[0] * *x;
+	float m1y = m[1] * *y;
+	float m2x = m[2] * *x;
+	float m3y = m[3] * *y;
+
+	*x = m0x + m1y;
+	*y = m2x + m3y;
+}
+
 ///////////////////////////////////////////////////////////
 
 SpriteBuffer::SpriteBuffer() :

@@ -21,6 +21,8 @@ struct SpriteMatrix {
 	SpriteMatrix& rotate(float degrees);
 	SpriteMatrix& scale(float x, float y);
 	SpriteMatrix& shear(float x, float y);
+
+	void transform(float* x, float* y);
 };
 
 struct SpriteBuffer {
