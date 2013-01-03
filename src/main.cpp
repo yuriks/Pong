@@ -16,6 +16,19 @@
 
 #define CHECK_GL_ERROR assert(glGetError() == GL_NO_ERROR)
 
+std::vector<Sprite> debug_sprites;
+
+void debugPoint(int x, int y) {
+	Sprite spr;
+	spr.img_w = spr.img_h = 4;
+	spr.img_x = 16 + 2;
+	spr.img_y = 16 + 2;
+	spr.x = static_cast<float>(x - 2);
+	spr.y = static_cast<float>(y - 2);
+
+	debug_sprites.push_back(spr);
+}
+
 GLuint loadMainTexture(int* width, int* height) {
 	GLuint main_texture;
 	glGenTextures(1, &main_texture);
@@ -422,6 +435,11 @@ int main() {
 			sprite_buffer.upload();
 			sprite_buffer.draw();
 		}
+
+		for (const Sprite& spr : debug_sprites) {
+			sprite_buffer.append(spr);
+		}
+		debug_sprites.clear();
 
 		glClear(GL_COLOR_BUFFER_BIT);
 		sprite_buffer.upload();
