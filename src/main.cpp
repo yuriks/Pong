@@ -36,6 +36,10 @@ struct Gem {
 	fixed16_16 vel_x;
 	fixed16_16 vel_y;
 
+	int score_value;
+	static const int MAX_VALUE = 10000;
+	static const int INITIAL_VALUE = 100;
+
 	static const int RADIUS = 8;
 };
 
@@ -95,10 +99,12 @@ void collideBallWithBoundary(Gem& ball) {
 	*/
 
 	// Bottom boundary
+	/*
 	if (ball.pos_y + Gem::RADIUS > WINDOW_HEIGHT) {
 		ball.vel_y = -ball.vel_y;
 		ball.pos_y = WINDOW_HEIGHT - Gem::RADIUS;
 	}
+	*/
 }
 
 void collideBallWithBall(Gem& a, Gem& b) {
@@ -200,7 +206,43 @@ void collideBallWithPaddle(Gem& ball, const Paddle& paddle) {
 
 		ball.vel_x = fixed16_16(vel.x);
 		ball.vel_y = fixed16_16(vel.y);
+
+		ball.score_value = std::min(ball.score_value * 11 / 10, Gem::MAX_VALUE);
 	}
+}
+
+void hsvToRgb(float h, float s, float v, float* out_r, float* out_g, float* out_b) {
+	// Taken from http://www.cs.rit.edu/~ncs/color/t_convert.html
+
+	assert(h >= 0.0f && h < 360.f);
+	assert(s >= 0.0f && s <= 1.0f);
+	assert(v >= 0.0f && v <= 1.0f);
+
+	h /= 60.0f;
+	int i = static_cast<int>(h);
+	float f = h - i;
+	float p = v*(1.0f - s);
+	float q = v*(1.0f - s*f);
+	float t = v*(1.0f - s*(1.0f - f));
+
+#define CASE(i, r, g, b) case i: *out_r = r; *out_g = g; *out_b = b; break
+	switch (i) {
+		CASE(0, v, t, p);
+		CASE(1, q, v, p);
+		CASE(2, p, v, t);
+		CASE(3, p, q, v);
+		CASE(4, t, p, v);
+		CASE(5, v, p, q);
+	default: assert(false);
+	}
+#undef CASE
+}
+
+float mapScoreToHue(int score_value) {
+	score_value -= Gem::INITIAL_VALUE;
+
+	float score_range = static_cast<float>(score_value) / (Gem::MAX_VALUE - Gem::INITIAL_VALUE);
+	return std::sqrt(score_range) * 300.0f;
 }
 
 int main() {
@@ -281,7 +323,6 @@ int main() {
 	paddle_spr.img_x = paddle_spr.img_y = 0;
 
 	Sprite ball_spr;
-	ball_spr.color = makeColor(255, 255, 255, 255);
 	ball_spr.img_w = ball_spr.img_h = 16;
 	ball_spr.img_x = 0; ball_spr.img_y = 16;
 
@@ -333,6 +374,7 @@ int main() {
 			b.pos_x = randRange(rng, WINDOW_WIDTH * 1 / 6, WINDOW_WIDTH * 5 / 6);
 			b.pos_y = -10;
 			b.vel_x = b.vel_y = 0;
+			b.score_value = Gem::INITIAL_VALUE;
 
 			game_state.gems.push_back(b);
 		}
@@ -354,6 +396,9 @@ int main() {
 
 			ball_spr.x = static_cast<float>(ball.pos_x.integer()) - ball_spr.img_w / 2;
 			ball_spr.y = static_cast<float>(ball.pos_y.integer()) - ball_spr.img_h / 2;
+			float r, g, b;
+			hsvToRgb(mapScoreToHue(ball.score_value), 1.0f, 1.0f, &r, &g, &b);
+			ball_spr.color = makeColor(uint8_t(r*255 + 0.5f), uint8_t(g*255 + 0.5f), uint8_t(b*255 + 0.5f), 255);
 			sprite_buffer.append(ball_spr);
 		}
 
