@@ -88,6 +88,7 @@
     <ClInclude Include="src\SpriteBuffer.hpp" />
     <ClInclude Include="src\stb_image.h" />
     <ClInclude Include="src\util.hpp" />
+    <ClInclude Include="src\vec2.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
