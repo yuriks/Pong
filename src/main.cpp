@@ -19,6 +19,7 @@ std::vector<Sprite> debug_sprites;
 
 void debugPoint(int x, int y) {
 	Sprite spr;
+	spr.color = makeColor(255, 0, 0, 255);
 	spr.img_w = spr.img_h = 4;
 	spr.img_x = 16 + 2;
 	spr.img_y = 16 + 2;
@@ -251,7 +252,8 @@ int main() {
 
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), reinterpret_cast<void*>(offsetof(VertexData, pos_x)));
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_TRUE,  sizeof(VertexData), reinterpret_cast<void*>(offsetof(VertexData, tex_s)));
-	for (int i = 0; i < 2; ++i)
+	glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE,  sizeof(VertexData), reinterpret_cast<void*>(offsetof(VertexData, color)));
+	for (int i = 0; i < 3; ++i)
 		glEnableVertexAttribArray(i);
 
 	GLuint ibo_id;
@@ -285,11 +287,13 @@ int main() {
 	}
 
 	Sprite paddle_spr;
+	paddle_spr.color = makeColor(255, 255, 255, 255);
 	paddle_spr.img_w = 64;
 	paddle_spr.img_h = 16;
 	paddle_spr.img_x = paddle_spr.img_y = 0;
 
 	Sprite ball_spr;
+	ball_spr.color = makeColor(255, 255, 255, 255);
 	ball_spr.img_w = ball_spr.img_h = 16;
 	ball_spr.img_x = 0; ball_spr.img_y = 16;
 

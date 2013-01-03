@@ -85,6 +85,7 @@ void SpriteBuffer::append(const Sprite& spr) {
 	float img_h = spr.img_h / tex_height;
 
 	VertexData v;
+	v.color = spr.color;
 
 	v.pos_x = spr.x;
 	v.pos_y = spr.y;
@@ -114,6 +115,7 @@ void SpriteBuffer::append(const Sprite& spr, const SpriteMatrix& matrix) {
 	float img_h = spr.img_h / tex_height;
 
 	VertexData v;
+	v.color = spr.color;
 
 	float x = spr.img_w / 2.0f;
 	float y = spr.img_h / 2.0f;
