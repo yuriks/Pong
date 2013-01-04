@@ -1,6 +1,7 @@
 #pragma once
 
 #include <random>
+#include <algorithm>
 
 template <typename T>
 T stepTowards(T initial, T target, T step) {
@@ -24,6 +25,11 @@ T clamp(T min, T val, T max) {
 	if (val < min) return min;
 	else if (val > max) return max;
 	else return val;
+}
+
+template <typename C, typename F>
+void remove_if(C& container, const F& predicate) {
+	container.erase(std::remove_if(container.begin(), container.end(), predicate), container.end());
 }
 
 typedef std::mt19937 RandomGenerator;
