@@ -9,6 +9,7 @@
 #include <vector>
 #include <cstdint>
 #include <array>
+#include <algorithm>
 #include "util.hpp"
 #include "Fixed.hpp"
 #include "SpriteBuffer.hpp"
@@ -41,6 +42,7 @@ struct Gem {
 	static const int INITIAL_VALUE = 100;
 
 	static const int RADIUS = 8;
+	static const int MERGE_SPEED = 6;
 };
 
 struct Paddle {
@@ -66,8 +68,8 @@ struct GameState {
 	std::vector<Gem> gems;
 };
 
-static const int WINDOW_WIDTH = 320;
-static const int WINDOW_HEIGHT = 240;
+static const int WINDOW_WIDTH = 240;
+static const int WINDOW_HEIGHT = 360;
 
 // Splits vector vel into components parallel and perpendicular to the normal
 // of the plane n.
@@ -112,40 +114,61 @@ void collideBallWithBall(Gem& a, Gem& b) {
 	float d_sqr = length_sqr(dv);
 
 	if (d_sqr < (2*Gem::RADIUS)*(2*Gem::RADIUS)) {
-		float d = std::sqrt(d_sqr);
-		float sz = Gem::RADIUS - d / 2.0f;
-		fixed24_8 push_back_x(sz * (dv.x/d));
-		fixed24_8 push_back_y(sz * (dv.y/d));
+		fixed16_16 rel_vel_x = a.vel_x - b.vel_x;
+		fixed16_16 rel_vel_y = a.vel_y - b.vel_y;
+		vec2 rel_vel = {rel_vel_x.toFloat(), rel_vel_y.toFloat()};
+		float rel_speed_sqr = length_sqr(rel_vel);
+		
+		if (rel_speed_sqr >= Gem::MERGE_SPEED*Gem::MERGE_SPEED) {
+			fixed32_0 two(2);
+			a.pos_x = (a.pos_x + b.pos_x) / two;
+			a.pos_y = (a.pos_y + b.pos_y) / two;
 
-		a.pos_x += push_back_x;
-		a.pos_y += push_back_y;
-		b.pos_x -= push_back_x;
-		b.pos_y -= push_back_y;
+			a.vel_x = a.vel_x + b.vel_x;
+			a.vel_y = a.vel_y + b.vel_y;
 
-		dv = dv / d;
+			a.score_value += b.score_value;
 
-		vec2 a_par, a_perp;
-		vec2 b_par, b_perp;
+			b.pos_x = -9999;
+			b.pos_y = 9999;
+			b.vel_x = b.vel_y = 0;
+			b.score_value = 0;
+		} else {
+			float d = std::sqrt(d_sqr);
+			float sz = Gem::RADIUS - d / 2.0f;
 
-		vec2 a_vel = {a.vel_x.toFloat(), a.vel_y.toFloat()};
-		vec2 b_vel = {b.vel_x.toFloat(), b.vel_y.toFloat()};
-		splitVector(a_vel, dv, &a_par, &a_perp);
-		splitVector(b_vel, -dv, &b_par, &b_perp);
+			vec2 normal = dv / d;
+			fixed24_8 push_back_x(sz * normal.x);
+			fixed24_8 push_back_y(sz * normal.y);
 
-		static const float friction = 1.0f;
-		static const float bounce = 0.9f;
+			a.pos_x += push_back_x;
+			a.pos_y += push_back_y;
+			b.pos_x -= push_back_x;
+			b.pos_y -= push_back_y;
 
-		float A = (1.0f + bounce) / 2.0f;
-		float B = (1.0f - bounce) / 2.0f;
+			vec2 a_par, a_perp;
+			vec2 b_par, b_perp;
 
-		a_vel = A*b_par + B*a_par + friction*a_perp;
-		b_vel = A*a_par + B*b_par + friction*b_perp;
+			vec2 a_vel = {a.vel_x.toFloat(), a.vel_y.toFloat()};
+			vec2 b_vel = {b.vel_x.toFloat(), b.vel_y.toFloat()};
+			splitVector(a_vel, normal, &a_par, &a_perp);
+			splitVector(b_vel, -normal, &b_par, &b_perp);
 
-		a.vel_x = fixed16_16(a_vel.x);
-		a.vel_y = fixed16_16(a_vel.y);
+			static const float friction = 1.0f;
+			static const float bounce = 0.9f;
 
-		b.vel_x = fixed16_16(b_vel.x);
-		b.vel_y = fixed16_16(b_vel.y);
+			float A = (1.0f + bounce) / 2.0f;
+			float B = (1.0f - bounce) / 2.0f;
+
+			a_vel = A*b_par + B*a_par + friction*a_perp;
+			b_vel = A*a_par + B*b_par + friction*b_perp;
+
+			a.vel_x = fixed16_16(a_vel.x);
+			a.vel_y = fixed16_16(a_vel.y);
+
+			b.vel_x = fixed16_16(b_vel.x);
+			b.vel_y = fixed16_16(b_vel.y);
+		}
 	}
 }
 
@@ -189,6 +212,10 @@ void collideBallWithPaddle(Gem& ball, const Paddle& paddle) {
 	float d_sqr = length_sqr(penetration);
 	float r = PADDLE_RADIUS + Gem::RADIUS;
 	if (d_sqr < r*r) {
+		vec2 vel = {ball.vel_x.toFloat(), ball.vel_y.toFloat()};
+		int score_addition = static_cast<int>(ball.score_value * (ball.vel_y.toFloat() / 128.f));
+		ball.score_value = std::min(ball.score_value + std::max(score_addition, 0), Gem::MAX_VALUE);
+
 		float d = std::sqrt(d_sqr);
 		float sz = r - d;
 
@@ -200,14 +227,11 @@ void collideBallWithPaddle(Gem& ball, const Paddle& paddle) {
 		ball.pos_y += push_back_y;
 
 		vec2 par, perp;
-		vec2 vel = {ball.vel_x.toFloat(), ball.vel_y.toFloat()};
 		splitVector(vel, normal, &par, &perp);
 		vel = perp - par;
 
 		ball.vel_x = fixed16_16(vel.x);
 		ball.vel_y = fixed16_16(vel.y);
-
-		ball.score_value = std::min(ball.score_value * 11 / 10, Gem::MAX_VALUE);
 	}
 }
 
@@ -322,9 +346,9 @@ int main() {
 	paddle_spr.img_h = 16;
 	paddle_spr.img_x = paddle_spr.img_y = 0;
 
-	Sprite ball_spr;
-	ball_spr.img_w = ball_spr.img_h = 16;
-	ball_spr.img_x = 0; ball_spr.img_y = 16;
+	Sprite gem_spr;
+	gem_spr.img_w = gem_spr.img_h = 16;
+	gem_spr.img_x = 0; gem_spr.img_y = 16;
 
 	static const int GEM_SPAWN_INTERVAL = 60*5;
 	int gem_spawn_timer = GEM_SPAWN_INTERVAL;
@@ -336,8 +360,6 @@ int main() {
 	////////////////////
 	bool running = true;
 	while (running) {
-		sprite_buffer.clear();
-
 		/* Update paddle */
 		{
 			Paddle& paddle = game_state.paddle;
@@ -359,11 +381,6 @@ int main() {
 				paddle.rotation = clamp(-PADDLE_MAX_ROTATION, paddle.rotation + rotation, PADDLE_MAX_ROTATION);
 			}
 			paddle.pos_x += paddle_speed;
-
-			paddle_spr.x = static_cast<float>(paddle.pos_x.integer());
-			paddle_spr.y = static_cast<float>(paddle.pos_y.integer());
-
-			sprite_buffer.append(paddle_spr, paddle.getSpriteMatrix());
 		}
 
 		/* Spawn new gems */
@@ -393,16 +410,30 @@ int main() {
 				collideBallWithBall(ball, game_state.gems[j]);
 			}
 			collideBallWithPaddle(ball, game_state.paddle);
-
-			ball_spr.x = static_cast<float>(ball.pos_x.integer()) - ball_spr.img_w / 2;
-			ball_spr.y = static_cast<float>(ball.pos_y.integer()) - ball_spr.img_h / 2;
-			float r, g, b;
-			hsvToRgb(mapScoreToHue(ball.score_value), 1.0f, 1.0f, &r, &g, &b);
-			ball_spr.color = makeColor(uint8_t(r*255 + 0.5f), uint8_t(g*255 + 0.5f), uint8_t(b*255 + 0.5f), 255);
-			sprite_buffer.append(ball_spr);
 		}
 
+		/* Clean up dead gems */
+		remove_if(game_state.gems, [](const Gem& gem) {
+			return gem.pos_y > WINDOW_HEIGHT + 128 && gem.vel_y > 0;
+		});
+
 		/* Draw scene */
+		sprite_buffer.clear();
+		
+		paddle_spr.x = static_cast<float>(game_state.paddle.pos_x.integer());
+		paddle_spr.y = static_cast<float>(game_state.paddle.pos_y.integer());
+		sprite_buffer.append(paddle_spr, game_state.paddle.getSpriteMatrix());
+
+		for (const Gem& gem : game_state.gems) {
+			gem_spr.x = static_cast<float>(gem.pos_x.integer()) - gem_spr.img_w / 2;
+			gem_spr.y = static_cast<float>(gem.pos_y.integer()) - gem_spr.img_h / 2;
+			float r, g, b;
+			hsvToRgb(mapScoreToHue(gem.score_value), 1.0f, 1.0f, &r, &g, &b);
+			gem_spr.color = makeColor(uint8_t(r*255 + 0.5f), uint8_t(g*255 + 0.5f), uint8_t(b*255 + 0.5f), 255);
+			sprite_buffer.append(gem_spr);
+		}
+
+		/* Submit sprites */
 		// More superfluous drawcalls to change the GPU into high-performance mode? Sure, why not.
 		glClear(GL_COLOR_BUFFER_BIT);
 		for (int i = 0; i < 1000; ++i) {
