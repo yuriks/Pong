@@ -110,6 +110,7 @@ void APIENTRY debug_callback(GLenum source, GLenum type, GLuint id, GLenum sever
 
 bool initWindow(int width, int height) {
 	if (!glfwInit()) {
+		std::cerr << "Couldn't init GLFW.\n";
 		return false;
 	}
 
@@ -117,25 +118,30 @@ bool initWindow(int width, int height) {
 	glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 3);
 	glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_TRUE);
 	if (!glfwOpenWindow(width, height, 8, 8, 8, 0, 0, 8, GLFW_WINDOW)) {
+		std::cerr << "Couldn't open window.\n";
 		return false;
 	}
 
 	if (gl3wInit()) {
+		std::cerr << "Couldn't init gl3w.\n";
 		return false;
 	}
 
 	if (!gl3wIsSupported(3, 3)) {
+		std::cerr << "OpenGL 3.3 not supported.\n";
 		return false;
 	}
 
 	glfwSwapInterval(1);
 	glViewport(0, 0, width, height);
 
+	/*
 	if (glDebugMessageCallbackARB) {
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
 		glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, GL_TRUE);
 		glDebugMessageCallbackARB(debug_callback, 0);
 	}
+	*/
 
 	return true;
 }

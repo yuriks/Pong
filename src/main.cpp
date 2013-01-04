@@ -271,6 +271,7 @@ float mapScoreToHue(int score_value) {
 
 int main() {
 	if (!initWindow(WINDOW_WIDTH, WINDOW_HEIGHT)) {
+		std::cerr << "Failed to initialize window.\n";
 		return 1;
 	}
 
