@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <array>
 #include <algorithm>
+#include <string>
 #include "util.hpp"
 #include "Fixed.hpp"
 #include "SpriteBuffer.hpp"
@@ -63,6 +64,13 @@ struct GameState {
 
 	Paddle paddle;
 	std::vector<Gem> gems;
+
+	int score;
+	int lives;
+
+	GameState()
+		: score(0), lives(5)
+	{ }
 };
 
 static const int WINDOW_WIDTH = 240;
@@ -266,6 +274,29 @@ float mapScoreToHue(int score_value) {
 	return std::sqrt(score_range) * 300.0f;
 }
 
+struct FontInfo {
+	char first_char;
+	int img_x, img_y;
+	int img_w, img_h;
+
+	FontInfo(char first_char, int img_x, int img_y, int img_w, int img_h)
+		: first_char(first_char), img_x(img_x), img_y(img_y), img_w(img_w), img_h(img_h)
+	{ }
+};
+
+void drawText(int x, int y, const std::string& text, SpriteBuffer& buffer, const FontInfo& font)
+{
+	Sprite spr;
+	spr.setPos(x, y);
+	spr.setImg(font.img_x, font.img_y, font.img_w, font.img_h);
+
+	for (char c : text) {
+		spr.img_x = font.img_x + (c - font.first_char) * font.img_w;
+		buffer.append(spr);
+		spr.x += font.img_w;
+	}
+}
+
 int main() {
 	if (!initWindow(WINDOW_WIDTH, WINDOW_HEIGHT)) {
 		std::cerr << "Failed to initialize window.\n";
@@ -423,6 +454,25 @@ int main() {
 			hsvToRgb(mapScoreToHue(gem.score_value), 1.0f, 1.0f, &r, &g, &b);
 			gem_spr.color = makeColor(uint8_t(r*255 + 0.5f), uint8_t(g*255 + 0.5f), uint8_t(b*255 + 0.5f), 255);
 			sprite_buffer.append(gem_spr);
+		}
+
+		// HUD
+		{
+			static const int HUD_X_POS = 1;
+			static const int HUD_Y_POS = 1;
+
+			Sprite hud_spr;
+			hud_spr.setImg(64, 0, 29, 11);
+			hud_spr.setPos(HUD_X_POS, HUD_Y_POS);
+			sprite_buffer.append(hud_spr);
+
+			hud_spr.setImg(64, 12, 29, 11);
+			hud_spr.setPos(HUD_X_POS, HUD_Y_POS + 13);
+			sprite_buffer.append(hud_spr);
+
+			std::string score_text = std::to_string(game_state.score);
+			FontInfo font('0', 40, 24, 8, 12);
+			drawText(HUD_X_POS + 31, HUD_Y_POS, score_text, sprite_buffer, font);
 		}
 
 		/* Submit sprites */
