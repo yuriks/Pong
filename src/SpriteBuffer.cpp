@@ -87,21 +87,21 @@ void SpriteBuffer::append(const Sprite& spr) {
 	VertexData v;
 	v.color = spr.color;
 
-	v.pos_x = spr.x;
-	v.pos_y = spr.y;
+	v.pos_x = static_cast<float>(spr.x);
+	v.pos_y = static_cast<float>(spr.y);
 	v.tex_s = img_x;
 	v.tex_t = img_y;
 	vertices.push_back(v);
 
-	v.pos_x = spr.x + spr.img_w;
+	v.pos_x = static_cast<float>(spr.x + spr.img_w);
 	v.tex_s = img_x + img_w;
 	vertices.push_back(v);
 
-	v.pos_y = spr.y + spr.img_h;
+	v.pos_y = static_cast<float>(spr.y + spr.img_h);
 	v.tex_t = img_y + img_h;
 	vertices.push_back(v);
 
-	v.pos_x = spr.x;
+	v.pos_x = static_cast<float>(spr.x);
 	v.tex_s = img_x;
 	vertices.push_back(v);
 

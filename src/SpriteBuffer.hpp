@@ -17,10 +17,24 @@ inline Color makeColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
 }
 
 struct Sprite {
-	float x, y;
-	float img_x, img_y;
-	float img_h, img_w;
+	int x, y;
+	int img_x, img_y;
+	int img_h, img_w;
 	Color color;
+
+	Sprite() {
+		const Color white = {255, 255, 255, 255};
+		color = white;
+	}
+
+	void setImg(int x, int y, int w, int h) {
+		img_x = x; img_y = y;
+		img_w = w; img_h = h;
+	}
+
+	void setPos(int x_, int y_) {
+		x = x_; y = y_;
+	}
 };
 
 struct SpriteMatrix {

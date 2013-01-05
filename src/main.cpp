@@ -21,11 +21,8 @@ std::vector<Sprite> debug_sprites;
 void debugPoint(int x, int y) {
 	Sprite spr;
 	spr.color = makeColor(255, 0, 0, 255);
-	spr.img_w = spr.img_h = 4;
-	spr.img_x = 16 + 2;
-	spr.img_y = 16 + 2;
-	spr.x = static_cast<float>(x - 2);
-	spr.y = static_cast<float>(y - 2);
+	spr.setImg(16 + 2, 16 + 2, 4, 4);
+	spr.setPos(x - 2, y - 2);
 
 	debug_sprites.push_back(spr);
 }
@@ -342,14 +339,10 @@ int main() {
 	}
 
 	Sprite paddle_spr;
-	paddle_spr.color = makeColor(255, 255, 255, 255);
-	paddle_spr.img_w = 64;
-	paddle_spr.img_h = 16;
-	paddle_spr.img_x = paddle_spr.img_y = 0;
+	paddle_spr.setImg(0, 0, 64, 16);
 
 	Sprite gem_spr;
-	gem_spr.img_w = gem_spr.img_h = 16;
-	gem_spr.img_x = 0; gem_spr.img_y = 16;
+	gem_spr.setImg(0, 16, 16, 16);
 
 	static const int GEM_SPAWN_INTERVAL = 60*5;
 	int gem_spawn_timer = GEM_SPAWN_INTERVAL;
@@ -421,13 +414,11 @@ int main() {
 		/* Draw scene */
 		sprite_buffer.clear();
 		
-		paddle_spr.x = static_cast<float>(game_state.paddle.pos_x.integer());
-		paddle_spr.y = static_cast<float>(game_state.paddle.pos_y.integer());
+		paddle_spr.setPos(game_state.paddle.pos_x.integer(), game_state.paddle.pos_y.integer());
 		sprite_buffer.append(paddle_spr, game_state.paddle.getSpriteMatrix());
 
 		for (const Gem& gem : game_state.gems) {
-			gem_spr.x = static_cast<float>(gem.pos_x.integer()) - gem_spr.img_w / 2;
-			gem_spr.y = static_cast<float>(gem.pos_y.integer()) - gem_spr.img_h / 2;
+			gem_spr.setPos(gem.pos_x.integer() - gem_spr.img_w / 2, gem.pos_y.integer() - gem_spr.img_h / 2);
 			float r, g, b;
 			hsvToRgb(mapScoreToHue(gem.score_value), 1.0f, 1.0f, &r, &g, &b);
 			gem_spr.color = makeColor(uint8_t(r*255 + 0.5f), uint8_t(g*255 + 0.5f), uint8_t(b*255 + 0.5f), 255);
